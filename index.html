@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pizza หน้าทะลัก - ระบบจัดการร้าน</title>
+    <title>Pizza หน้าทะลัก - POS System</title>
     <!-- โหลดฟอนต์ Prompt -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- โหลด Tailwind CSS -->
@@ -16,533 +16,536 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Prompt', 'sans-serif'] },
-                    colors: { brand: '#F97316' }
+                    colors: { 
+                        brand: {
+                            DEFAULT: '#FF5C00', // สีส้มหลักตามภาพ
+                            light: '#FFF0E5',
+                            hover: '#E55300'
+                        },
+                        bg: '#F4F6F8' // สีพื้นหลังเทาอ่อน
+                    }
                 }
             }
         }
     </script>
     <style>
-        body { -webkit-font-smoothing: antialiased; }
-        .animate-fade { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body { background-color: #F4F6F8; -webkit-font-smoothing: antialiased; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* CSS สำหรับการพิมพ์สลิปความร้อน (Thermal Printer) */
-        @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 80mm; padding: 10px; font-size: 12px; color: black; }
-            .no-print { display: none !important; }
-        }
+        /* Custom Input Number Hide Arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 selection:bg-brand selection:text-white">
+<body class="text-slate-800">
 
-    <!-- ================= 1. หน้าจอ Login Flow ================= -->
-    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full border-t-8 border-brand relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-brand opacity-10 rounded-bl-full -z-10"></div>
+    <!-- ================= 1. หน้าจอ Login (ตามภาพ 000748) ================= -->
+    <div id="login-screen" class="fixed inset-0 bg-[#333C4A] z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[32px] p-8 md:p-10 max-w-md w-full shadow-2xl relative">
             
-            <div class="text-center mb-8">
-                <div class="w-20 h-20 bg-orange-50 text-brand rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-inner text-4xl">
-                    <i class="fa-solid fa-pizza-slice"></i>
+            <!-- Logo -->
+            <div class="flex flex-col items-center justify-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-br from-[#FF7A00] to-[#FF5C00] text-white rounded-2xl flex items-center justify-center text-3xl shadow-lg mb-4">
+                    <i class="fa-solid fa-pizza-slice -rotate-45"></i>
                 </div>
-                <h1 class="text-3xl font-bold text-slate-900">Pizza หน้าทะลัก</h1>
-                <p class="text-sm text-slate-500 mt-1">ระบบบริหารจัดการร้าน (POS & ERP)</p>
+                <h1 class="text-3xl font-black text-[#1A1F2B] tracking-tight">Pizza หน้าทะลัก</h1>
+                <p class="text-sm text-slate-500 mt-1">ระบบลงทะเบียนเข้าปฏิบัติงานและสรุปยอดเงินสดประจำวัน</p>
             </div>
 
-            <!-- Step 1: เลือกสาขา -->
-            <div id="step-1" class="space-y-4 animate-fade">
+            <!-- Form -->
+            <div class="space-y-6">
+                <!-- Step 1: Branch -->
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">1. เลือกสาขาที่ปฏิบัติงาน</label>
-                    <select id="branch-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:border-brand outline-none transition-colors">
-                        <option value="Terminal 21 โคราช">สาขา Terminal 21 โคราช</option>
-                        <option value="เซ็นทรัล โคราช">สาขา เซ็นทรัล โคราช</option>
-                        <option value="ตลาด RN Yard">สาขา ตลาด RN Yard</option>
-                    </select>
-                </div>
-                <button onclick="goToStep(2)" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-md transition-all flex justify-center items-center gap-2">
-                    ถัดไป <i class="fa-solid fa-arrow-right"></i>
-                </button>
-            </div>
-
-            <!-- Step 2: Google Login (จำลอง) -->
-            <div id="step-2" class="space-y-4 animate-fade hidden">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">2. เข้าสู่ระบบด้วยบัญชีองค์กร</label>
-                <button onclick="mockGoogleLogin()" class="w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold py-3.5 rounded-xl shadow-sm transition-all flex justify-center items-center gap-3">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
-                    เข้าสู่ระบบด้วย Google
-                </button>
-                <button onclick="goToStep(1)" class="w-full text-slate-400 text-sm font-semibold hover:text-slate-600">กลับไปเลือกสาขา</button>
-            </div>
-
-            <!-- Step 3: ระบุชื่อเล่น -->
-            <div id="step-3" class="space-y-4 animate-fade hidden">
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center gap-3 mb-4">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-10 h-10 rounded-full bg-slate-200">
-                    <div>
-                        <p class="text-xs text-slate-500">ล็อกอินในชื่อ</p>
-                        <p id="display-email" class="text-sm font-bold text-slate-800">employee@pizza.com</p>
+                    <label class="block text-sm font-bold text-slate-800 mb-3"><i class="fa-solid fa-shop text-brand mr-1"></i> 1. เลือกสาขาที่จะเข้าปฏิบัติงาน <span class="text-red-500">*</span></label>
+                    <div class="space-y-3">
+                        <!-- Active Branch -->
+                        <div class="border-2 border-brand bg-[#FFF6F0] rounded-xl p-4 flex items-center justify-between cursor-pointer shadow-sm">
+                            <div>
+                                <h4 class="font-bold text-brand flex items-center gap-2"><i class="fa-solid fa-lock"></i> สาขา เทอมินอล 21 โคราช</h4>
+                                <p class="text-xs text-orange-600/80 mt-1">ชั้น 4 โซนอาหาร เทอมินอล 21 นครราชสีมา</p>
+                            </div>
+                            <div class="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-check text-xs"></i>
+                            </div>
+                        </div>
+                        <!-- Inactive Branch -->
+                        <div class="border border-slate-200 bg-slate-50 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:border-slate-300 transition-colors">
+                            <div>
+                                <h4 class="font-bold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-lock text-slate-400"></i> สาขา ตลาด อาร์เอ็นยาร์ด</h4>
+                                <p class="text-xs text-slate-400 mt-1">ตลาด RN Yard โคราช ล็อก C55</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Step 2: User Data -->
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">3. ระบุชื่อพนักงาน (พิมพ์ 'admin' เพื่อทดสอบสิทธิ์)</label>
-                    <input type="text" id="nickname-input" placeholder="เช่น: สมชาย" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 focus:border-brand outline-none transition-colors">
+                    <label class="block text-sm font-bold text-slate-800 mb-3"><i class="fa-regular fa-user text-brand mr-1"></i> 2. กรอกข้อมูลพนักงาน / ผู้เข้าใช้งาน <span class="text-red-500">*</span></label>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-xs font-bold text-slate-600 mb-1">ชื่อเล่น / ชื่อพนักงาน (Nickname):</p>
+                            <div class="relative">
+                                <i class="fa-regular fa-user absolute left-4 top-3.5 text-slate-400"></i>
+                                <input type="text" placeholder="เช่น น้องส้ม, พี่เป้, แอดมินตั้ม" class="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-brand outline-none transition-colors">
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-600 mb-1">อีเมลที่เข้าสู่ระบบ (Email):</p>
+                            <div class="relative">
+                                <i class="fa-regular fa-envelope absolute left-4 top-3.5 text-slate-400"></i>
+                                <input type="email" placeholder="เช่น somchai@gmail.com (ไม่จำเป็นต้องกรอก)" class="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-brand outline-none transition-colors">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button onclick="completeLogin()" class="w-full bg-brand hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-md shadow-orange-200 transition-all">
-                    เข้าใช้งานระบบ
+
+                <!-- Submit Button -->
+                <button onclick="login()" class="w-full bg-gradient-to-r from-[#FF7A00] to-[#FF5C00] hover:shadow-lg hover:shadow-orange-500/30 text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-[15px]">
+                    เข้าใช้งานระบบ <i class="fa-solid fa-arrow-right"></i>
                 </button>
+
+                <!-- Divider -->
+                <div class="relative flex items-center py-2">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-slate-400 text-xs">หรือล็อกอินด้วย Google</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <!-- Google Auth Button -->
+                <button class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-3 text-sm shadow-sm">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
+                    เข้าสู่ระบบด้วย Google (ดึงอีเมลอัตโนมัติ)
+                </button>
+
+                <!-- Helper Text -->
+                <div class="bg-[#F8FAFC] border border-slate-200 rounded-xl p-3">
+                    <h5 class="text-xs font-bold text-emerald-600 flex items-center gap-1"><i class="fa-regular fa-circle-check"></i> จดจำการเข้าสู่ระบบอัตโนมัติ:</h5>
+                    <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">เมื่อกดเข้าใช้งาน ระบบจะบันทึกสถานะไว้ตลอด ไม่ต้องล็อกอินซ้ำ จนกว่าจะกด "ออกจากระบบ"</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- ================= 2. หน้าจอแอปหลัก (App Layout) ================= -->
-    <div id="main-app" class="hidden min-h-screen flex flex-col">
-        <!-- Header Navbar -->
-        <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+
+    <!-- ================= 2. แอปพลิเคชันหลัก (ตามภาพ 000820) ================= -->
+    <div id="main-app" class="hidden min-h-screen flex-col">
+        
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+            <!-- Top Bar -->
+            <div class="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between">
+                <!-- Left: Logo -->
                 <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-pizza-slice text-brand text-2xl"></i>
-                    <div>
-                        <h1 class="font-bold text-lg leading-tight hidden sm:block text-slate-900">Pizza <span class="text-brand">หน้าทะลัก</span></h1>
-                        <p class="text-[10px] text-emerald-600 font-bold flex items-center gap-1"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> Connected to Sheets</p>
+                    <div class="w-8 h-8 bg-brand text-white rounded-lg flex items-center justify-center text-lg -rotate-12">
+                        <i class="fa-solid fa-pizza-slice"></i>
                     </div>
+                    <h1 class="font-black text-lg text-[#1A1F2B]">Pizza <span class="text-brand font-normal">หน้าทะลัก</span></h1>
                 </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-right">
-                        <div class="text-sm font-bold text-slate-800" id="user-nickname">พนักงาน</div>
-                        <div class="text-[11px] font-bold px-2 py-0.5 bg-orange-50 text-brand rounded-full inline-block mt-0.5 border border-orange-100">
-                            <i class="fa-solid fa-shield-halved mr-1"></i><span id="user-role">Staff</span> • <span id="user-branch">สาขา</span>
-                        </div>
-                    </div>
-                    <button onclick="logout()" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl transition-colors">
-                        <i class="fa-solid fa-power-off"></i>
+
+                <!-- Right: Badges & Profile -->
+                <div class="flex items-center gap-3">
+                    <span class="flex items-center gap-1.5 bg-orange-50 text-brand border border-orange-100 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                        <i class="fa-regular fa-circle-check"></i> เจ้าของ (Admin)
+                    </span>
+                    <span class="flex items-center gap-1.5 bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                        <i class="fa-solid fa-store text-orange-400"></i> สาขา: สาขา เทอมินอล 21 โคราช
+                    </span>
+                    <button class="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-bold hover:bg-emerald-100 transition-colors shadow-sm">
+                        <i class="fa-solid fa-file-excel"></i> Google Sheet <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </button>
+                    <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                    <button onclick="logout()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full text-sm font-semibold transition-colors text-slate-700">
+                        Supaqz <i class="fa-solid fa-arrow-right-from-bracket text-slate-400"></i>
                     </button>
                 </div>
             </div>
             
-            <!-- Tabs Navigation -->
-            <div class="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-slate-50">
-                <button onclick="switchTab('stock')" id="tab-stock" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-brand text-white shadow-md shadow-orange-200 transition-all whitespace-nowrap">
-                    <i class="fa-solid fa-boxes-stacked"></i> จัดการสต็อก
-                </button>
-                <button onclick="switchTab('cash')" id="tab-cash" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all whitespace-nowrap">
-                    <i class="fa-solid fa-cash-register"></i> สรุปยอดเงิน
-                </button>
-                <button onclick="switchTab('admin')" id="tab-admin" class="hidden items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all whitespace-nowrap">
-                    <i class="fa-solid fa-users-gear"></i> แอดมิน
-                </button>
+            <!-- Tabs Bar -->
+            <div class="border-t border-slate-100">
+                <div class="max-w-[1400px] mx-auto px-4 flex gap-2 py-2 overflow-x-auto hide-scrollbar">
+                    <button class="bg-brand text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-orange-500/20 flex items-center gap-2 shrink-0">
+                        <i class="fa-solid fa-cube"></i> 1. จัดการข้อมูลสต๊อก (Stock)
+                    </button>
+                    <button class="bg-white hover:bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200 px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shrink-0">
+                        <i class="fa-regular fa-calendar-check"></i> 2. สรุปยอดเงินสดประจำวัน (Daily Cash)
+                    </button>
+                    <button class="bg-white hover:bg-slate-50 text-slate-600 border border-transparent hover:border-slate-200 px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shrink-0">
+                        <i class="fa-solid fa-users"></i> 3. จัดการสิทธิ์ & พนักงาน (Admin)
+                    </button>
+                </div>
             </div>
         </header>
 
-        <!-- Main Content Area -->
-        <main class="flex-1 max-w-7xl w-full mx-auto p-4 pb-20">
+        <!-- Main Content (Stock Page) -->
+        <main class="flex-1 max-w-[1400px] w-full mx-auto p-4 md:p-6 pb-24">
             
-            <!-- ================= Tab 1: จัดการสต็อก & ของเสีย ================= -->
-            <section id="page-stock" class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 animate-fade">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <div>
-                        <h2 class="font-bold text-xl text-slate-900"><i class="fa-solid fa-clipboard-list text-brand mr-2"></i>รายการสต็อกวัตถุดิบ</h2>
-                        <p class="text-sm text-slate-500 mt-1">อัปเดตและบันทึกของเสียประจำวัน</p>
-                    </div>
-                    <button class="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-800 shadow-md">
-                        <i class="fa-solid fa-cloud-arrow-up mr-1"></i> ซิงก์สต็อก
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-cube text-brand text-2xl"></i> ใบนับสต๊อกสินค้าประจำวัน (สาขา เทอมินอล 21 โคราช)
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1 pl-8">บันทึกและตรวจสอบปริมาณสต๊อกคงเหลือ และของเสีย/ทิ้งประจำวัน</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="bg-orange-50 text-brand border border-orange-200 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-orange-100 transition-colors">
+                        <i class="fa-solid fa-file-lines"></i> ใบนับสต๊อกประจำวัน
+                    </button>
+                    <button class="bg-white text-slate-600 border border-slate-300 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
+                        <i class="fa-solid fa-bars-staggered"></i> คลังสินค้าทั้งหมด (32)
                     </button>
                 </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm border-collapse">
-                        <thead class="bg-slate-50 border-y border-slate-200 text-slate-600">
-                            <tr>
-                                <th class="p-4 font-bold">รายการสินค้า</th>
-                                <th class="p-4 font-bold text-center">สถานะ</th>
-                                <th class="p-4 font-bold text-center">ของเสีย (Waste)</th>
-                                <th class="p-4 font-bold text-right">คงเหลือ</th>
-                                <th class="p-4 font-bold text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stock-tbody" class="divide-y divide-slate-100">
-                            <!-- JS จะสร้างแถวตารางตรงนี้ -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            </div>
 
-            <!-- ================= Tab 2: สรุปยอดเงินสดประจำวัน ================= -->
-            <section id="page-cash" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 p-6 animate-fade max-w-2xl mx-auto">
-                <h2 class="font-bold text-xl text-slate-900 mb-6 pb-4 border-b border-slate-100">
-                    <i class="fa-solid fa-calculator text-brand mr-2"></i>ระบบนับเงินสด & พิมพ์สลิป
-                </h2>
+            <!-- Content Box -->
+            <div class="bg-white rounded-[24px] shadow-sm border border-slate-200 overflow-hidden">
                 
-                <div class="grid grid-cols-2 gap-x-6 gap-y-4 mb-6">
-                    <!-- เครื่องคิดเลขแบงก์/เหรียญ -->
-                    <div class="col-span-2 sm:col-span-1 space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                        <h3 class="font-bold text-slate-700 text-sm mb-3">นับธนบัตรและเหรียญ</h3>
-                        
-                        <div class="flex items-center gap-2">
-                            <span class="w-12 text-xs font-bold text-slate-500">1000 ฿</span>
-                            <input type="number" id="b1000" class="cash-input w-full p-2 border rounded-lg text-right text-sm font-bold" placeholder="0">
+                <!-- Toolbar -->
+                <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-[#FAFBFC]">
+                    <div class="flex flex-col w-full md:w-auto">
+                        <span class="text-xs font-bold text-brand mb-1">สาขา เทอมินอล 21 โคราช</span>
+                        <h3 class="font-bold text-slate-800 text-lg">ใบนับสต๊อกวัตถุดิบและบรรจุภัณฑ์</h3>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-lg px-3 py-2 w-full md:w-auto">
+                        <i class="fa-regular fa-calendar text-slate-400"></i>
+                        <span class="text-xs text-slate-500">วันที่:</span>
+                        <span class="text-sm font-bold text-brand">01/08/2026</span>
+                        <i class="fa-solid fa-calendar-day text-slate-400 ml-2"></i>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="p-4 flex gap-4 bg-white">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-3 text-slate-400"></i>
+                        <input type="text" placeholder="ค้นหารายการวัตถุดิบ..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:border-brand outline-none">
+                    </div>
+                    <select class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 outline-none min-w-[200px]">
+                        <option>ทุกหมวดหมู่ (32)</option>
+                    </select>
+                </div>
+
+                <!-- Stock Grid -->
+                <div class="p-4 bg-slate-50 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    
+                    <!-- Card 1 -->
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-brand transition-colors group">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-slate-800 text-[15px]">แป้งพิซซ่า</h4>
+                            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">แผ่น</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-12 text-xs font-bold text-slate-500">500 ฿</span>
-                            <input type="number" id="b500" class="cash-input w-full p-2 border rounded-lg text-right text-sm font-bold" placeholder="0">
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-12 text-xs font-bold text-slate-500">100 ฿</span>
-                            <input type="number" id="b100" class="cash-input w-full p-2 border rounded-lg text-right text-sm font-bold" placeholder="0">
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-12 text-xs font-bold text-slate-500">50 ฿</span>
-                            <input type="number" id="b50" class="cash-input w-full p-2 border rounded-lg text-right text-sm font-bold" placeholder="0">
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-12 text-xs font-bold text-slate-500">20 ฿</span>
-                            <input type="number" id="b20" class="cash-input w-full p-2 border rounded-lg text-right text-sm font-bold" placeholder="0">
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-12 text-xs font-bold text-slate-500">เหรียญ</span>
-                            <input type="number" id="coins" class="cash-input w-full p-2 border rounded-lg text-right text-sm font-bold" placeholder="0">
-                        </div>
-                        <div class="pt-2 border-t border-slate-200 mt-2">
-                            <div class="flex justify-between items-center text-brand font-bold">
-                                <span>รวมในเก๊ะ:</span>
-                                <span id="actual-cash">0 ฿</span>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">เหลือ</label>
+                                <input type="number" value="0" class="w-full text-center font-black text-slate-700 border border-slate-300 rounded-lg py-2 focus:border-brand outline-none text-lg">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-red-500 mb-1">ทิ้ง/เสีย</label>
+                                <input type="number" value="0" class="w-full text-center font-black text-red-600 bg-red-50 border border-red-200 rounded-lg py-2 outline-none text-lg">
                             </div>
                         </div>
                     </div>
 
-                    <!-- สรุปยอดขาย (POS) -->
-                    <div class="col-span-2 sm:col-span-1 space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">ยอดขายรวมจากระบบ (Gross Sales)</label>
-                            <input type="number" id="gross-sales" class="w-full bg-white border border-slate-300 rounded-xl p-3 text-right font-bold text-lg focus:border-brand" value="0">
+                    <!-- Card 2 -->
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-brand transition-colors group">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-slate-800 text-[15px]">แฮมสั้น</h4>
+                            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">ถุง</span>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">เงินทอนตั้งต้น (Drawer Cash)</label>
-                            <input type="number" id="drawer-cash" class="w-full bg-white border border-slate-300 rounded-xl p-3 text-right font-bold text-lg focus:border-brand" value="0">
-                        </div>
-                        
-                        <!-- สรุปผลต่าง -->
-                        <div id="diff-box" class="bg-slate-100 rounded-xl p-4 text-center mt-4">
-                            <p class="text-xs font-bold text-slate-500 mb-1">ผลต่างยอดเงิน</p>
-                            <p id="diff-amount" class="text-2xl font-black text-slate-700">0 ฿</p>
-                            <p id="diff-status" class="text-sm font-bold mt-1 text-slate-500">รอคำนวณ</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">เหลือ</label>
+                                <input type="number" value="0" class="w-full text-center font-black text-slate-700 border border-slate-300 rounded-lg py-2 focus:border-brand outline-none text-lg">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-red-500 mb-1">ทิ้ง/เสีย</label>
+                                <input type="number" value="0" class="w-full text-center font-black text-red-600 bg-red-50 border border-red-200 rounded-lg py-2 outline-none text-lg">
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="flex gap-3">
-                    <button onclick="window.print()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl hover:bg-slate-200 transition-colors border border-slate-300">
-                        <i class="fa-solid fa-print mr-1"></i> พิมพ์สลิป
-                    </button>
-                    <button class="flex-1 bg-brand hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors">
-                        <i class="fa-solid fa-cloud-arrow-up mr-1"></i> บันทึกยอด (Sheets)
-                    </button>
-                </div>
-            </section>
-
-            <!-- ================= Tab 3: หน้าจัดการสิทธิ์ (Admin Only) ================= -->
-            <section id="page-admin" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200 p-6 animate-fade">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="font-bold text-xl text-slate-900"><i class="fa-solid fa-users-gear text-brand mr-2"></i>จัดการพนักงาน & สิทธิ์</h2>
-                        <p class="text-sm text-slate-500">Admin Mode - ควบคุมการเข้าถึงรายบุคคล</p>
+                    <!-- Card 3 -->
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-brand transition-colors group">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-slate-800 text-[15px]">แฮมยาว</h4>
+                            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">ถุง</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">เหลือ</label>
+                                <input type="number" value="0" class="w-full text-center font-black text-slate-700 border border-slate-300 rounded-lg py-2 focus:border-brand outline-none text-lg">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-red-500 mb-1">ทิ้ง/เสีย</label>
+                                <input type="number" value="0" class="w-full text-center font-black text-red-600 bg-red-50 border border-red-200 rounded-lg py-2 outline-none text-lg">
+                            </div>
+                        </div>
                     </div>
-                    <button class="bg-brand text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-orange-600 shadow-md">
-                        + เพิ่มพนักงานใหม่
-                    </button>
+                    
+                    <!-- Card 4 -->
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-brand transition-colors group">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-slate-800 text-[15px]">เบคอน</h4>
+                            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">ถุง</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">เหลือ</label>
+                                <input type="number" value="0" class="w-full text-center font-black text-slate-700 border border-slate-300 rounded-lg py-2 focus:border-brand outline-none text-lg">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-red-500 mb-1">ทิ้ง/เสีย</label>
+                                <input type="number" value="0" class="w-full text-center font-black text-red-600 bg-red-50 border border-red-200 rounded-lg py-2 outline-none text-lg">
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm border-collapse">
-                        <thead class="bg-slate-50 border-y border-slate-200 text-slate-600">
-                            <tr>
-                                <th class="p-4 font-bold">ชื่อพนักงาน</th>
-                                <th class="p-4 font-bold">อีเมล (Google)</th>
-                                <th class="p-4 font-bold text-center">สิทธิ์ (Role)</th>
-                                <th class="p-4 font-bold text-center">สาขาประจำ</th>
-                                <th class="p-4 font-bold text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr>
-                                <td class="p-4 font-bold">บอส (คุณ)</td>
-                                <td class="p-4 text-slate-500">boss@pizza.com</td>
-                                <td class="p-4 text-center"><span class="bg-slate-900 text-white px-2 py-1 rounded text-xs font-bold">Admin</span></td>
-                                <td class="p-4 text-center">ทุกสาขา</td>
-                                <td class="p-4 text-center text-slate-300">-</td>
-                            </tr>
-                            <tr>
-                                <td class="p-4 font-bold">สมชาย</td>
-                                <td class="p-4 text-slate-500">somchai@gmail.com</td>
-                                <td class="p-4 text-center"><span class="bg-orange-100 text-brand px-2 py-1 rounded text-xs font-bold">Staff</span></td>
-                                <td class="p-4 text-center text-sm">Terminal 21</td>
-                                <td class="p-4 text-center"><button class="text-blue-500 hover:underline text-xs font-bold">แก้ไข</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Footer Action Bar -->
+                <div class="p-4 border-t border-slate-200 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-sm text-slate-500">ดึงรายชื่อสต๊อกทั้งหมด 32 รายการ สำหรับวันที่ 2026-08-01</p>
+                    <button class="w-full md:w-auto bg-brand hover:bg-[#E55300] text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-colors">
+                        <i class="fa-regular fa-floppy-disk"></i> บันทึกใบนับสต๊อกประจำวันที่ 2026-08-01
+                    </button>
                 </div>
-            </section>
+            </div>
+
+            <!-- Success Message (ตามภาพ 000942) -->
+            <div class="mt-6 bg-[#E8F8F0] border border-[#A7E9C4] rounded-xl p-4 flex items-center gap-3">
+                <div class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-check text-xs"></i>
+                </div>
+                <p class="text-sm font-bold text-emerald-800">บันทึกการนับสต๊อกประจำวัน 2026-08-01 เรียบร้อยแล้ว!</p>
+            </div>
+            <!-- ================= แท็บ 2: หน้าสรุปยอดเงินสด (Daily Cash) ================= -->
+<section id="page-cash" class="hidden animate-fade-in">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+            <span class="inline-block bg-orange-100 text-brand px-3 py-1 rounded-full text-[10px] font-bold mb-2">
+                <i class="fa-solid fa-file-invoice-dollar mr-1"></i> ใบรับเงินสด & สรุปยอดขายประจำวัน
+            </span>
+            <h2 class="text-xl font-bold text-slate-800">
+                ใบนับเงินสด & สรุปยอดขายรายวัน (สาขา เทอมินอล 21 โคราช)
+            </h2>
+        </div>
+        <div class="flex gap-2">
+            <div class="flex items-center gap-2 bg-white border border-slate-300 rounded-lg px-4 py-2">
+                <i class="fa-regular fa-calendar text-slate-400"></i>
+                <span class="text-xs text-slate-500">วันที่:</span>
+                <span class="text-sm font-bold text-brand">01/08/2026</span>
+                <i class="fa-solid fa-calendar-day text-slate-400 ml-2"></i>
+            </div>
+            <button onclick="toggleModal('modal-receipt')" class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-orange-600 transition-colors shadow-sm">
+                <i class="fa-solid fa-print"></i> ออกใบเสร็จสรุปยอด
+            </button>
+        </div>
+    </div>
+
+    <!-- Layout 2 คอลัมน์ -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- คอลัมน์ซ้าย: ตารางนับธนบัตร (กว้าง 7 ส่วน) -->
+        <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 border-b border-slate-100 bg-[#FAFBFC] flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-money-bill-1-wave text-brand mr-2"></i> 1. ตารางนับธนบัตรและเหรียญ</h3>
+                <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-1 rounded border border-slate-200">สาขา เทอมินอล 21 โคราช</span>
+            </div>
+            
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 border-b border-slate-100 text-slate-600">
+                    <tr>
+                        <th class="py-3 px-4 text-left font-bold w-1/3">ชนิด</th>
+                        <th class="py-3 px-4 text-center font-bold w-1/3">จำนวน (ใบ/เหรียญ)</th>
+                        <th class="py-3 px-4 text-right font-bold w-1/3">รวมเงิน (บาท)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700" id="cash-table-body">
+                    <!-- แถวธนบัตร (JS จะเป็นตัวคำนวณ) -->
+                    <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">1000 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-1000" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 focus:border-brand outline-none" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-1000">฿0</td></tr>
+                    <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">500 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-500" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 focus:border-brand outline-none" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-500">฿0</td></tr>
+                    <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">100 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-100" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 focus:border-brand outline-none" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-100">฿0</td></tr>
+                    <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">50 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-50" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 focus:border-brand outline-none" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-50">฿0</td></tr>
+                    <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">20 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-20" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 focus:border-brand outline-none" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-20">฿0</td></tr>
+                    <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">10 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-10" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 focus:border-brand outline-none" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-10">฿0</td></tr>
+                    <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">5 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-5" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 focus:border-brand outline-none" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-5">฿0</td></tr>
+                    <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">2 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-2" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 focus:border-brand outline-none" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-2">฿0</td></tr>
+                    <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">1 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-1" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 focus:border-brand outline-none" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-1">฿0</td></tr>
+                </tbody>
+                <tfoot class="bg-orange-50/50 border-t border-orange-100">
+                    <tr>
+                        <td colspan="2" class="py-4 px-4 text-center font-bold text-slate-800">รวมเงินสดทั้งหมด (Total Cash)</td>
+                        <td class="py-4 px-4 text-right font-black text-brand text-lg" id="total-actual-cash">฿0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- คอลัมน์ขวา: หักค่าใช้จ่าย & สรุป (กว้าง 5 ส่วน) -->
+        <div class="lg:col-span-5 space-y-4">
+            
+            <!-- 2. ยอดขายพิซซ่า -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                <h3 class="font-bold text-brand text-sm mb-3"><i class="fa-solid fa-pizza-slice mr-2"></i> 2. สรุปยอดขายพิซซ่าประจำวัน</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="border border-orange-200 bg-orange-50/30 rounded-xl p-3">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">ขายได้ (ถาด)</label>
+                        <input type="number" class="w-full text-center font-bold text-brand bg-transparent outline-none text-xl" placeholder="0">
+                    </div>
+                    <div class="border border-slate-200 bg-slate-50 rounded-xl p-3">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">คงเหลือ (ชิ้น)</label>
+                        <input type="number" class="w-full text-center font-bold text-slate-700 bg-transparent outline-none text-xl" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. รายการหักเงินสด -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                <h3 class="font-bold text-red-500 text-sm mb-3"><i class="fa-solid fa-arrow-trend-down mr-2"></i> 3. รายการหักเงินสดประจำวัน</h3>
+                <div class="space-y-2 mb-3">
+                    <div class="flex items-center gap-2">
+                        <input type="text" value="หักเงินทอน" readonly class="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none">
+                        <div class="relative w-1/2">
+                            <span class="absolute left-3 top-2 text-slate-400 text-sm font-bold">฿</span>
+                            <input type="number" id="deduct-1" class="deduct-input w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-2 text-sm text-red-500 font-bold outline-none focus:border-red-400 text-right" placeholder="0">
+                        </div>
+                        <button class="w-8 h-8 rounded-lg bg-slate-100 text-slate-400 hover:text-red-500 flex items-center justify-center shrink-0"><i class="fa-regular fa-trash-can"></i></button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" value="หักค่าล้างจาน" readonly class="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none">
+                        <div class="relative w-1/2">
+                            <span class="absolute left-3 top-2 text-slate-400 text-sm font-bold">฿</span>
+                            <input type="number" id="deduct-2" class="deduct-input w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-2 text-sm text-red-500 font-bold outline-none focus:border-red-400 text-right" placeholder="0">
+                        </div>
+                        <button class="w-8 h-8 rounded-lg bg-slate-100 text-slate-400 hover:text-red-500 flex items-center justify-center shrink-0"><i class="fa-regular fa-trash-can"></i></button>
+                    </div>
+                </div>
+                
+                <!-- เพิ่มรายการหัก -->
+                <div class="flex items-center gap-2 border-t border-slate-100 pt-3">
+                    <input type="text" placeholder="+ ค่าใช้จ่าย เช่น ค่าขยะ" class="w-1/2 bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand">
+                    <div class="relative w-1/2 flex items-center gap-2">
+                        <input type="number" placeholder="บาท" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand text-right">
+                        <button class="bg-brand text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-orange-600 shrink-0">เพิ่ม</button>
+                    </div>
+                </div>
+                <input type="text" placeholder="หมายเหตุเพิ่มเติมของรายการนี้ (ถ้ามี)" class="w-full mt-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs outline-none">
+            </div>
+
+            <!-- หมายเหตุ -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                <h3 class="font-bold text-slate-600 text-sm mb-2"><i class="fa-regular fa-note-sticky text-amber-500 mr-2"></i> หมายเหตุเพิ่มเติม</h3>
+                <textarea rows="2" placeholder="ระบุหมายเหตุเพิ่มเติม หรือสรุปยอดประจำวัน..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand resize-none"></textarea>
+            </div>
+
+            <!-- 4. สรุปเงินนำส่ง (กล่องเขียว) -->
+            <div class="bg-[#00B900] rounded-2xl shadow-lg p-5 text-white relative overflow-hidden">
+                <i class="fa-solid fa-wallet absolute -right-4 -bottom-4 text-[100px] opacity-10"></i>
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-sm">4. เงินสดคงเหลือสุทธินำส่ง</h3>
+                        <i class="fa-solid fa-wallet text-xl"></i>
+                    </div>
+                    <p class="text-4xl font-black mb-1" id="net-cash-display">฿0.00</p>
+                    <p class="text-[10px] text-green-100 mb-4" id="net-cash-formula">คำนวณจาก: เงินสด (฿0) - ยอดหัก (฿0)</p>
+                    
+                    <div class="flex gap-2">
+                        <button class="flex-1 bg-white text-[#00B900] font-bold py-2.5 rounded-xl text-sm shadow-sm hover:bg-green-50 transition-colors flex items-center justify-center gap-2">
+                            <i class="fa-regular fa-floppy-disk"></i> บันทึกยอดประจำวันที่ 2026-08-01
+                        </button>
+                        <button onclick="toggleModal('modal-receipt')" class="bg-green-700/50 hover:bg-green-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-print"></i> ดูใบเสร็จสรุปยอด
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
 
         </main>
-    </div>
-
-    <!-- ================= 3. พื้นที่สำหรับพิมพ์สลิป (ซ่อนไว้ โชว์ตอน Print) ================= -->
-    <div id="print-area" class="hidden bg-white">
-        <div style="text-align: center; border-bottom: 1px dashed black; padding-bottom: 10px; margin-bottom: 10px;">
-            <h2 style="font-size: 16px; margin: 0;">Pizza หน้าทะลัก</h2>
-            <p id="print-branch" style="margin: 0; font-size: 12px;"></p>
-            <p id="print-date" style="margin: 0; font-size: 10px;"></p>
-        </div>
-        <p>พนักงาน: <span id="print-staff"></span></p>
-        <div style="border-bottom: 1px dashed black; padding-bottom: 10px; margin-bottom: 10px;">
-            <p style="display: flex; justify-content: space-between;">ยอดขายรวม: <span id="print-gross">0</span></p>
-            <p style="display: flex; justify-content: space-between;">เงินทอนตั้งต้น: <span id="print-drawer">0</span></p>
-            <p style="display: flex; justify-content: space-between;">เงินที่นับได้จริง: <span id="print-actual">0</span></p>
-        </div>
-        <h3 id="print-diff" style="text-align: center; font-size: 14px;">พอดี (0)</h3>
-        <p style="text-align: center; font-size: 10px; margin-top: 10px;">*** สำหรับส่งฝ่ายบัญชี ***</p>
-    </div>
-
-    <!-- ================= 4. Modal: Admin PIN ================= -->
-    <div id="pin-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center border-t-8 border-slate-900 animate-fade">
-            <i class="fa-solid fa-lock text-5xl text-slate-900 mb-4"></i>
-            <h3 class="font-black text-xl mb-1 text-slate-900">ยืนยันรหัส PIN ผู้ดูแล</h3>
-            <p class="text-sm text-slate-500 mb-6">กรุณาใส่รหัสเพื่อเข้าถึงส่วนนี้ (รหัส: 1234)</p>
-            
-            <input type="password" id="pin-input" class="w-full text-center text-3xl tracking-[0.5em] bg-slate-50 border border-slate-300 rounded-xl px-4 py-4 font-black mb-6 focus:border-brand outline-none" maxlength="4">
-            
-            <div class="flex gap-3">
-                <button onclick="closePinModal()" class="flex-1 bg-slate-100 text-slate-700 rounded-xl font-bold py-3 hover:bg-slate-200 transition-colors">ยกเลิก</button>
-                <button onclick="verifyPin()" class="flex-1 bg-slate-900 text-white rounded-xl font-bold py-3 hover:bg-slate-800 shadow-md transition-colors">ยืนยัน</button>
-            </div>
+        
+        <!-- Bottom Floating Toast -->
+        <div class="fixed bottom-6 right-6 bg-[#1A1F2B] text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-semibold">
+            <div class="w-2 h-2 rounded-full bg-brand"></div>
+            แก้ไขข้อมูล "กระดาษรอง" เรียบร้อยแล้ว
         </div>
     </div>
 
-    <!-- ================= 5. Javascript Logic ================= -->
+    <!-- JS จำลองการ Login -->
     <script>
-        /* --- 1. ข้อมูลและ State เริ่มต้น --- */
-        const ADMIN_PIN = "1234";
-        let pendingAction = null;
-        let stockItems = [
-            { id: 1, name: 'แป้งพิซซ่าถาดกลาง', qty: 25, unit: 'ถาด', min: 20 },
-            { id: 2, name: 'ชีสมอสซาเรลล่า', qty: 5, unit: 'kg', min: 10 },
-            { id: 3, name: 'กล่องพิซซ่า', qty: 150, unit: 'ใบ', min: 50 }
-        ];
-
-        /* --- 2. ระบบ Login & Session --- */
-        function goToStep(step) {
-            document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`step-${step}`).classList.remove('hidden');
+        function login() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('flex');
         }
-
-        function mockGoogleLogin() {
-            document.getElementById('display-email').innerText = "user.mock@gmail.com";
-            goToStep(3);
-        }
-
-        function completeLogin() {
-            const nickname = document.getElementById('nickname-input').value.trim();
-            const branch = document.getElementById('branch-select').value;
-            if(!nickname) return alert("กรุณาใส่ชื่อพนักงานครับ");
-
-            // กำหนด Role (จำลอง)
-            const role = nickname.toLowerCase() === 'admin' ? 'Admin' : 'Staff';
-            const sessionData = { nickname, branch, role };
-            
-            localStorage.setItem('pizza_session', JSON.stringify(sessionData));
-            loadSession();
-        }
-
-        function loadSession() {
-            const session = localStorage.getItem('pizza_session');
-            if(session) {
-                const data = JSON.parse(session);
-                
-                // อัปเดต UI Header
-                document.getElementById('user-nickname').innerText = data.nickname;
-                document.getElementById('user-branch').innerText = data.branch;
-                document.getElementById('user-role').innerText = data.role;
-                
-                // อัปเดตข้อมูลบนสลิปพิมพ์
-                document.getElementById('print-staff').innerText = data.nickname;
-                document.getElementById('print-branch').innerText = data.branch;
-                document.getElementById('print-date').innerText = new Date().toLocaleString('th-TH');
-
-                // ซ่อนปุ่ม Admin ถ้าเป็น Staff
-                const adminTab = document.getElementById('tab-admin');
-                if(data.role === 'Admin') {
-                    adminTab.classList.replace('hidden', 'flex');
-                } else {
-                    adminTab.classList.replace('flex', 'hidden');
-                    switchTab('stock'); // บังคับกลับหน้าสต็อก
-                }
-
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                
-                renderStock();
-            }
-        }
-
         function logout() {
-            localStorage.removeItem('pizza_session');
             document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('auth-screen').classList.remove('hidden');
-            document.getElementById('nickname-input').value = '';
-            goToStep(1);
+            document.getElementById('main-app').classList.remove('flex');
+            document.getElementById('login-screen').classList.remove('hidden');
         }
-
-        /* --- 3. ระบบ Tabs & Admin PIN --- */
-        function switchTab(tabId) {
-            const session = JSON.parse(localStorage.getItem('pizza_session') || '{}');
-            
-            // เช็คสิทธิ์และขอ PIN ถ้าจะเข้าหน้า Admin
-            if(tabId === 'admin') {
-                if(session.role !== 'Admin') return alert("ไม่มีสิทธิ์เข้าถึงหน้านี้");
-                pendingAction = () => executeTabSwitch(tabId);
-                openPinModal();
-                return;
-            }
-            executeTabSwitch(tabId);
+    // ฟังก์ชันสลับแท็บเมนู
+function switchTab(tabId) {
+    const tabs = ['page-stock', 'page-cash', 'page-admin'];
+    tabs.forEach(t => {
+        const el = document.getElementById(t);
+        if(el) {
+            if(t === tabId) el.classList.remove('hidden');
+            else el.classList.add('hidden');
         }
+    });
+}
 
-        function executeTabSwitch(tabId) {
-            ['stock', 'cash', 'admin'].forEach(tab => {
-                const btn = document.getElementById(`tab-${tab}`);
-                const page = document.getElementById(`page-${tab}`);
-                if(btn && page) {
-                    if(tab === tabId) {
-                        btn.className = "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-brand text-white shadow-md shadow-orange-200 transition-all whitespace-nowrap";
-                        page.classList.remove('hidden');
-                    } else {
-                        btn.className = "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all whitespace-nowrap";
-                        page.classList.add('hidden');
-                    }
-                }
-            });
-        }
+// ระบบคำนวณเงินสดอัตโนมัติ
+function calculateDailyCash() {
+    // 1. คำนวณธนบัตร
+    const m1000 = (parseInt(document.getElementById('qty-1000').value) || 0) * 1000;
+    const m500 = (parseInt(document.getElementById('qty-500').value) || 0) * 500;
+    const m100 = (parseInt(document.getElementById('qty-100').value) || 0) * 100;
+    const m50 = (parseInt(document.getElementById('qty-50').value) || 0) * 50;
+    const m20 = (parseInt(document.getElementById('qty-20').value) || 0) * 20;
+    const m10 = (parseInt(document.getElementById('qty-10').value) || 0) * 10;
+    const m5 = (parseInt(document.getElementById('qty-5').value) || 0) * 5;
+    const m2 = (parseInt(document.getElementById('qty-2').value) || 0) * 2;
+    const m1 = (parseInt(document.getElementById('qty-1').value) || 0) * 1;
 
-        function openPinModal() {
-            document.getElementById('pin-modal').classList.remove('hidden');
-            document.getElementById('pin-input').value = '';
-            setTimeout(() => document.getElementById('pin-input').focus(), 100);
-        }
+    // แสดงผลรายบรรทัด
+    document.getElementById('sum-1000').innerText = `฿${m1000.toLocaleString()}`;
+    document.getElementById('sum-500').innerText = `฿${m500.toLocaleString()}`;
+    document.getElementById('sum-100').innerText = `฿${m100.toLocaleString()}`;
+    document.getElementById('sum-50').innerText = `฿${m50.toLocaleString()}`;
+    document.getElementById('sum-20').innerText = `฿${m20.toLocaleString()}`;
+    document.getElementById('sum-10').innerText = `฿${m10.toLocaleString()}`;
+    document.getElementById('sum-5').innerText = `฿${m5.toLocaleString()}`;
+    document.getElementById('sum-2').innerText = `฿${m2.toLocaleString()}`;
+    document.getElementById('sum-1').innerText = `฿${m1.toLocaleString()}`;
 
-        function closePinModal() {
-            document.getElementById('pin-modal').classList.add('hidden');
-            pendingAction = null;
-        }
+    // ยอดรวมเงินสดในเก๊ะ
+    const totalCash = m1000 + m500 + m100 + m50 + m20 + m10 + m5 + m2 + m1;
+    document.getElementById('total-actual-cash').innerText = `฿${totalCash.toLocaleString()}`;
 
-        function verifyPin() {
-            const pin = document.getElementById('pin-input').value;
-            if(pin === ADMIN_PIN) {
-                closePinModal();
-                if(pendingAction) pendingAction();
-            } else {
-                alert("รหัส PIN ไม่ถูกต้อง");
-                document.getElementById('pin-input').value = '';
-            }
-        }
+    // 2. คำนวณยอดหัก
+    const deduct1 = parseInt(document.getElementById('deduct-1').value) || 0;
+    const deduct2 = parseInt(document.getElementById('deduct-2').value) || 0;
+    const totalDeduct = deduct1 + deduct2;
 
-        /* --- 4. ระบบจัดการสต็อก --- */
-        function renderStock() {
-            const tbody = document.getElementById('stock-tbody');
-            tbody.innerHTML = '';
-            
-            stockItems.forEach(item => {
-                // คำนวณ Badge เตือนสต็อก
-                let badge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold">ปกติ</span>`;
-                if(item.qty === 0) badge = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">สินค้าหมด</span>`;
-                else if(item.qty <= item.min) badge = `<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">สต็อกต่ำ</span>`;
+    // 3. คำนวณยอดสุทธิ
+    const netCash = totalCash - totalDeduct;
+    
+    // อัปเดตกล่องสีเขียว
+    document.getElementById('net-cash-display').innerText = `฿${netCash.toLocaleString()}.00`;
+    document.getElementById('net-cash-formula').innerText = `คำนวณจาก: เงินสด (฿${totalCash.toLocaleString()}) - ยอดหัก (฿${totalDeduct.toLocaleString()})`;
+}
 
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="p-4 font-semibold text-slate-800">${item.name}</td>
-                        <td class="p-4 text-center">${badge}</td>
-                        <td class="p-4 text-center">
-                            <input type="number" class="w-16 border rounded p-1 text-center text-xs text-red-600 font-bold bg-red-50" placeholder="0">
-                        </td>
-                        <td class="p-4 text-right font-black text-slate-700 text-lg">${item.qty} <span class="text-xs text-slate-400 font-normal">${item.unit}</span></td>
-                        <td class="p-4 text-center">
-                            <button onclick="updateQty(${item.id}, 1)" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700 transition-colors"><i class="fa-solid fa-plus"></i></button>
-                            <button onclick="updateQty(${item.id}, -1)" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 hover:bg-red-100 hover:text-red-700 transition-colors ml-1"><i class="fa-solid fa-minus"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function updateQty(id, change) {
-            const item = stockItems.find(i => i.id === id);
-            if(item) {
-                item.qty = Math.max(0, item.qty + change);
-                renderStock();
-            }
-        }
-
-        /* --- 5. ระบบคำนวณเงินสด (POS) --- */
-        function calculateCash() {
-            // ดึงค่าแบงก์/เหรียญ
-            const b1000 = (parseInt(document.getElementById('b1000').value) || 0) * 1000;
-            const b500 = (parseInt(document.getElementById('b500').value) || 0) * 500;
-            const b100 = (parseInt(document.getElementById('b100').value) || 0) * 100;
-            const b50 = (parseInt(document.getElementById('b50').value) || 0) * 50;
-            const b20 = (parseInt(document.getElementById('b20').value) || 0) * 20;
-            const coins = parseInt(document.getElementById('coins').value) || 0;
-            
-            const actualCash = b1000 + b500 + b100 + b50 + b20 + coins;
-            document.getElementById('actual-cash').innerText = actualCash.toLocaleString() + ' ฿';
-            
-            // คำนวณผลต่างยอดขาย
-            const gross = parseFloat(document.getElementById('gross-sales').value) || 0;
-            const drawer = parseFloat(document.getElementById('drawer-cash').value) || 0;
-            const expectedCash = gross + drawer;
-            const diff = actualCash - expectedCash;
-
-            // แสดงผลลัพธ์ UI
-            const diffBox = document.getElementById('diff-box');
-            const diffAmount = document.getElementById('diff-amount');
-            const diffStatus = document.getElementById('diff-status');
-            
-            diffAmount.innerText = Math.abs(diff).toLocaleString() + ' ฿';
-
-            if(diff === 0 && actualCash > 0) {
-                diffBox.className = "rounded-xl p-4 text-center mt-4 bg-emerald-100 border border-emerald-200";
-                diffAmount.className = "text-2xl font-black text-emerald-700";
-                diffStatus.innerText = "✅ ยอดเงินพอดี";
-                diffStatus.className = "text-sm font-bold mt-1 text-emerald-600";
-            } else if (diff > 0) {
-                diffBox.className = "rounded-xl p-4 text-center mt-4 bg-blue-100 border border-blue-200";
-                diffAmount.className = "text-2xl font-black text-blue-700";
-                diffStatus.innerText = "⬆️ เงินเกิน";
-                diffStatus.className = "text-sm font-bold mt-1 text-blue-600";
-            } else if (diff < 0) {
-                diffBox.className = "rounded-xl p-4 text-center mt-4 bg-red-100 border border-red-200";
-                diffAmount.className = "text-2xl font-black text-red-700";
-                diffStatus.innerText = "🔻 เงินขาด";
-                diffStatus.className = "text-sm font-bold mt-1 text-red-600";
-            } else {
-                diffBox.className = "rounded-xl p-4 text-center mt-4 bg-slate-100";
-                diffAmount.className = "text-2xl font-black text-slate-700";
-                diffStatus.innerText = "รอคำนวณ";
-                diffStatus.className = "text-sm font-bold mt-1 text-slate-500";
-            }
-
-            // ซิงก์ข้อมูลลงสลิปสำหรับพิมพ์
-            document.getElementById('print-gross').innerText = gross.toLocaleString();
-            document.getElementById('print-drawer').innerText = drawer.toLocaleString();
-            document.getElementById('print-actual').innerText = actualCash.toLocaleString();
-            document.getElementById('print-diff').innerText = `${diffStatus.innerText.replace(/[✅⬆️🔻]/g, '')} (${diff.toLocaleString()})`;
-        }
-
-        // ผูก Event ให้คำนวณอัตโนมัติเมื่อพิมพ์
-        document.querySelectorAll('.cash-input, #gross-sales, #drawer-cash').forEach(input => {
-            input.addEventListener('input', calculateCash);
-        });
-
-        // ตรวจสอบ Session ตอนโหลดหน้าเว็บ
-        window.onload = loadSession;
+// ผูก Event Listener ให้ช่อง Input เพื่อให้คำนวณทันทีที่พิมพ์
+document.addEventListener('DOMContentLoaded', () => {
+    const inputs = document.querySelectorAll('.cash-input, .deduct-input');
+    inputs.forEach(input => {
+        input.addEventListener('input', calculateDailyCash);
+    });
+});    
     </script>
 </body>
 </html>
