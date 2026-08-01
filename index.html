@@ -3,80 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Remix Pizza - ระบบหน้าจอ POS</title>
+    <title>Pizza - ระบบจัดการร้าน (HTML Edition)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans">
+<body class="bg-slate-50 text-slate-800 font-sans selection:bg-orange-500 selection:text-white">
 
-    <!-- หน้า Login -->
+    <!-- ================= หน้าจอ Login Flow ================= -->
     <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border-t-8 border-orange-500">
             <div class="text-center mb-6">
-                <h1 class="text-2xl font-black text-slate-900"><i class="fa-solid fa-pizza-slice text-orange-500"></i> Remix Pizza</h1>
-                <p class="text-sm text-slate-500">ระบบเข้าสู่ระบบ (POS)</p>
+                <div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+                    <i class="fa-solid fa-pizza-slice"></i>
+                </div>
+                <h1 class="text-2xl font-black text-slate-900">Remix Pizza</h1>
+                <p class="text-sm text-slate-500">ระบบจัดการร้าน หน้าทะลัก</p>
             </div>
-            <div class="space-y-4">
-                <select id="branch-select" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:border-orange-500">
-                    <option value="เทอมินอล 21 โคราช">เทอมินอล 21 โคราช</option>
-                    <option value="ตลาด RN Yard">ตลาด RN Yard</option>
-                </select>
-                <input type="text" id="username-input" placeholder="พิมพ์ชื่อพนักงาน..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:border-orange-500">
-                <button onclick="login()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl shadow-md">เข้าใช้งานระบบ</button>
+
+            <!-- Step 1: เลือกสาขา -->
+            <div id="login-step-1" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">1. เลือกสาขาที่จะเข้าปฏิบัติงาน</label>
+                    <select id="branch-select" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:border-orange-500">
+                        <option value="เทอมินอล 21 โคราช">เทอมินอล 21 โคราช</option>
+                        <option value="ตลาด RN Yard">ตลาด RN Yard</option>
+                    </select>
+                </div>
+                <button onclick="nextStep()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md transition-colors">
+                    ถัดไป <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+
+            <!-- Step 2: ระบุตัวตน -->
+            <div id="login-step-2" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">2. ยืนยันตัวตนพนักงาน</label>
+                    <input type="text" id="username-input" placeholder="พิมพ์ชื่อเล่น (พิมพ์ 'admin' เพื่อทดสอบสิทธิ์)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:border-orange-500 mb-3">
+                    <input type="email" id="email-input" placeholder="อีเมลสำหรับซิงก์ข้อมูล" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:border-orange-500">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="prevStep()" class="px-4 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200">กลับ</button>
+                    <button onclick="login()" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl shadow-md transition-colors">
+                        เข้าใช้งานระบบ
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- หน้าแอปหลัก POS -->
+    <!-- ================= หน้าจอแอปหลัก (ซ่อนไว้ตอนแรก) ================= -->
     <div id="main-app" class="hidden min-h-screen flex flex-col">
-        <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 px-4 py-3 flex justify-between items-center">
-            <h1 class="font-black text-lg"><i class="fa-solid fa-pizza-slice text-orange-500"></i> Pizza <span id="display-branch" class="text-orange-500 text-sm"></span></h1>
-            <div class="text-xs font-bold bg-slate-100 px-3 py-1.5 rounded-lg">พนักงาน: <span id="display-user"></span></div>
+        <!-- แถบ Header & สิทธิ์พนักงาน -->
+        <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
+            <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-pizza-slice text-orange-500 text-2xl"></i>
+                    <h1 class="font-black text-lg hidden sm:block">Pizza <span class="text-orange-500">หน้าทะลัก</span></h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <div class="text-sm font-bold text-slate-800" id="display-user">พนักงาน</div>
+                        <div class="text-[10px] font-bold px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full inline-block mt-0.5">
+                            <span id="display-role">Staff</span> • <span id="display-branch">สาขา</span>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-xl transition-colors">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- แถบเลือกหน้าจอ (Tabs) -->
+            <div class="max-w-6xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto">
+                <button onclick="switchTab('stock')" id="tab-stock" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-orange-500 text-white shadow-md transition-all">
+                    <i class="fa-solid fa-boxes-stacked"></i> สต๊อก
+                </button>
+                <button onclick="switchTab('pos')" id="tab-pos" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">
+                    <i class="fa-solid fa-calculator"></i> ยอดเงิน
+                </button>
+                <button onclick="switchTab('admin')" id="tab-admin" class="hidden items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">
+                    <i class="fa-solid fa-users-gear"></i> แอดมิน
+                </button>
+            </div>
         </header>
 
-        <main class="flex-1 max-w-md w-full mx-auto p-4">
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
-                <h2 class="font-bold text-lg border-b pb-2"><i class="fa-solid fa-calculator text-orange-500 mr-2"></i>สรุปยอดขายประจำวัน</h2>
-                
-                <!-- เครื่องคิดเลข POS -->
+        <!-- เนื้อหาหลัก -->
+        <main class="flex-1 max-w-6xl w-full mx-auto p-4">
+            
+            <!-- Tab 1: หน้าสต๊อกสินค้า -->
+            <section id="page-stock" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 animate-fade-in">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-bold text-lg"><i class="fa-solid fa-boxes-stacked text-orange-500 mr-2"></i>นับสต๊อกสินค้า</h2>
+                    <span class="text-xs text-slate-400">อัปเดตล่าสุด: วันนี้</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="p-3 font-bold">ชื่อวัตถุดิบ</th>
+                                <th class="p-3 font-bold text-right">คงเหลือ</th>
+                                <th class="p-3 font-bold text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stock-table-body" class="divide-y divide-slate-100">
+                            <!-- ข้อมูลจะถูกวาดด้วย JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Tab 2: หน้าสรุปยอด (POS) -->
+            <section id="page-pos" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-5 animate-fade-in max-w-md mx-auto">
+                <h2 class="font-bold text-lg mb-4 border-b pb-2"><i class="fa-solid fa-calculator text-orange-500 mr-2"></i>สรุปยอดเงินประจำวัน</h2>
                 <div class="space-y-3 text-sm">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">ยอดเงินสดในลิ้นชัก (บาท)</label>
-                        <input type="number" id="pos-cash" value="0" oninput="calculateNet()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold text-lg focus:border-orange-500 text-right">
+                        <label class="block font-bold text-slate-700 mb-1">ยอดเงินสดหน้าร้าน (บาท)</label>
+                        <input type="number" id="pos-cash" value="0" oninput="calculateNet()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-bold text-lg text-right focus:border-orange-500">
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1 text-red-600">หักค่าใช้จ่าย/เบิกรายวัน (บาท)</label>
-                        <input type="number" id="pos-expense" value="0" oninput="calculateNet()" class="w-full bg-red-50 border border-red-200 rounded-xl px-3 py-2 font-bold text-lg text-red-600 focus:border-red-500 text-right">
+                        <label class="block font-bold text-slate-700 mb-1 text-red-600">หักรายจ่าย/เบิกเงินสด (บาท)</label>
+                        <input type="number" id="pos-expense" value="0" oninput="calculateNet()" class="w-full bg-red-50 border border-red-200 rounded-xl px-3 py-2 font-bold text-lg text-red-600 text-right focus:border-red-500">
                     </div>
                 </div>
-
                 <div class="bg-emerald-600 text-white rounded-xl p-4 text-center shadow-inner mt-4">
                     <p class="text-xs font-bold opacity-80 uppercase">ยอดเงินสุทธิที่ต้องนำฝาก</p>
                     <p id="pos-net" class="text-3xl font-black mt-1">0</p>
                 </div>
-
                 <button id="save-btn" onclick="saveData()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-md mt-6 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกยอดและส่งเข้า LINE
+                    <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกยอดและซิงก์ Google Sheets
                 </button>
             </section>
+
+            <!-- Tab 3: หน้า Admin (แสดงเฉพาะเจ้าของร้าน) -->
+            <section id="page-admin" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-5 animate-fade-in">
+                <h2 class="font-bold text-lg mb-4 border-b pb-2"><i class="fa-solid fa-crown text-amber-500 mr-2"></i>ระบบจัดการสิทธิ์ (Admin Only)</h2>
+                <div class="p-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                    <i class="fa-solid fa-lock text-4xl mb-3 text-slate-300"></i>
+                    <p class="font-bold mb-1">ตั้งค่าความปลอดภัยและพนักงาน</p>
+                    <p class="text-xs">สามารถดูข้อมูลพนักงาน, เปลี่ยนแปลงรหัส PIN และกำหนด Branch Lock ได้ที่นี่</p>
+                    <button class="mt-4 bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-50">
+                        <i class="fa-solid fa-key mr-1"></i> เปลี่ยน PIN ยืนยันตัวตน
+                    </button>
+                </div>
+            </section>
+
         </main>
     </div>
 
-    <script>
-        // *** สำคัญ: นำ Web App URL ของ Google Apps Script มาใส่ตรงนี้ ***
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3ExdAabjngZCfX1Qi-K44kTh6_xAd7XXWyvKFC5G3gueNbVKiQr-XnVW3ngaG34vx/exec";
+    <!-- Modal: ใส่รหัส PIN สำหรับ Admin -->
+    <div id="pin-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full text-center">
+            <i class="fa-solid fa-shield-halved text-4xl text-orange-500 mb-3"></i>
+            <h3 class="font-black text-lg mb-1">ยืนยันรหัส PIN (Admin)</h3>
+            <p class="text-xs text-slate-500 mb-4">รหัสเริ่มต้นคือ 1234</p>
+            <input type="password" id="pin-input" class="w-full text-center text-2xl tracking-widest bg-slate-100 border border-slate-300 rounded-xl px-4 py-3 font-bold mb-4 focus:border-orange-500 outline-none" maxlength="4">
+            <div class="flex gap-2">
+                <button onclick="closePinModal()" class="flex-1 bg-slate-100 text-slate-600 rounded-xl font-bold py-2 hover:bg-slate-200">ยกเลิก</button>
+                <button onclick="verifyPin()" class="flex-1 bg-orange-500 text-white rounded-xl font-bold py-2 hover:bg-orange-600 shadow-md">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
 
-        function login() {
-            const user = document.getElementById('username-input').value;
-            const branch = document.getElementById('branch-select').value;
-            if(!user) return alert('กรุณาพิมพ์ชื่อพนักงานครับ');
-            
-            document.getElementById('display-user').innerText = user;
-            document.getElementById('display-branch').innerText = `(${branch})`;
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
+    <!-- ================= Javascript ================= -->
+    <style>
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+
+    <script>
+        // ลิงก์ Apps Script (เปลี่ยนให้เป็นของคุณ)
+        const APPS_SCRIPT_URL = "ใส่_WEB_APP_URL_ของคุณตรงนี้_ให้ลงท้ายด้วย_/exec";
+        const ADMIN_PIN = "1234"; 
+
+        // ข้อมูลสต๊อกเบื้องต้น
+        let stockItems = [
+            { id: 1, name: 'แป้งพิซซ่า (ถาดกลาง)', qty: 45, unit: 'ถาด' },
+            { id: 2, name: 'ชีสรวม (kg)', qty: 8, unit: 'kg' },
+            { id: 3, name: 'กล่องพิซซ่า', qty: 120, unit: 'ใบ' }
+        ];
+
+        // 1. ระบบ Login Flow
+        function nextStep() {
+            document.getElementById('login-step-1').classList.add('hidden');
+            document.getElementById('login-step-2').classList.remove('hidden');
+        }
+        function prevStep() {
+            document.getElementById('login-step-2').classList.add('hidden');
+            document.getElementById('login-step-1').classList.remove('hidden');
         }
 
+        function login() {
+            const user = document.getElementById('username-input').value.trim();
+            const branch = document.getElementById('branch-select').value;
+            if(!user) return alert('กรุณาระบุชื่อพนักงานครับ');
+
+            // ตรวจสอบ Role (ถ้าพิมพ์ admin จะได้สิทธิ์แอดมิน)
+            const role = user.toLowerCase() === 'admin' ? 'Admin' : 'Staff';
+            
+            // บันทึกลง LocalStorage (Persistent Session)
+            const userData = { nickname: user, branch: branch, role: role };
+            localStorage.setItem('pizza_user_session', JSON.stringify(userData));
+
+            loadSession();
+        }
+
+        function logout() {
+            localStorage.removeItem('pizza_user_session');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('username-input').value = '';
+            prevStep(); // กลับไปหน้าเลือกสาขา
+        }
+
+        function loadSession() {
+            const session = localStorage.getItem('pizza_user_session');
+            if(session) {
+                const userData = JSON.parse(session);
+                
+                // แสดงข้อมูลบน Header
+                document.getElementById('display-user').innerText = userData.nickname;
+                document.getElementById('display-branch').innerText = userData.branch;
+                document.getElementById('display-role').innerText = userData.role;
+
+                // จัดการสิทธิ์การมองเห็นแท็บ Admin
+                const adminTabBtn = document.getElementById('tab-admin');
+                if(userData.role === 'Admin') {
+                    adminTabBtn.style.display = 'flex'; // โชว์ปุ่ม Admin
+                } else {
+                    adminTabBtn.style.display = 'none'; // ซ่อนปุ่ม
+                    switchTab('stock'); // บังคับกลับหน้าสต๊อกถ้าไม่ใช่ Admin
+                }
+
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                renderStock();
+            }
+        }
+
+        // 2. ระบบจัดการแท็บและการขอ PIN Admin
+        let pendingTab = null;
+
+        function switchTab(tab) {
+            const userData = JSON.parse(localStorage.getItem('pizza_user_session') || '{}');
+            
+            // ถ้าพนักงานพยายามเข้าหน้า Admin ให้เด้ง Modal ขอ PIN
+            if(tab === 'admin' && userData.role !== 'Admin') {
+                return alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้ครับ');
+            }
+
+            // ถ้ายูสเซอร์เป็น Admin และพยายามกดเข้าหน้า Admin (จำลองระบบความปลอดภัย)
+            if(tab === 'admin') {
+                pendingTab = tab;
+                document.getElementById('pin-modal').classList.remove('hidden');
+                document.getElementById('pin-input').value = '';
+                document.getElementById('pin-input').focus();
+                return; // หยุดไว้ก่อน รอ PIN
+            }
+
+            executeSwitchTab(tab);
+        }
+
+        function executeSwitchTab(tab) {
+            const tabs = ['stock', 'pos', 'admin'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const page = document.getElementById(`page-${t}`);
+                if(btn && page) {
+                    if(t === tab) {
+                        btn.className = "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-orange-500 text-white shadow-md transition-all";
+                        page.classList.remove('hidden');
+                    } else {
+                        btn.className = "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all";
+                        page.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        // ระบบยืนยัน PIN
+        function verifyPin() {
+            const input = document.getElementById('pin-input').value;
+            if(input === ADMIN_PIN) {
+                closePinModal();
+                if(pendingTab) executeSwitchTab(pendingTab);
+            } else {
+                alert('รหัส PIN ไม่ถูกต้อง!');
+                document.getElementById('pin-input').value = '';
+            }
+        }
+        function closePinModal() {
+            document.getElementById('pin-modal').classList.add('hidden');
+            pendingTab = null;
+        }
+
+        // 3. ระบบ Stock
+        function renderStock() {
+            const tbody = document.getElementById('stock-table-body');
+            tbody.innerHTML = '';
+            stockItems.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-orange-50 transition-colors">
+                        <td class="p-3 font-semibold text-slate-800">${item.name}</td>
+                        <td class="p-3 text-right font-black text-orange-600">${item.qty} <span class="text-xs text-slate-500 font-normal">${item.unit}</span></td>
+                        <td class="p-3 text-center">
+                            <button onclick="updateQty(${item.id}, 1)" class="bg-emerald-100 text-emerald-700 w-8 h-8 rounded-lg hover:bg-emerald-200"><i class="fa-solid fa-plus"></i></button>
+                            <button onclick="updateQty(${item.id}, -1)" class="bg-red-100 text-red-700 w-8 h-8 rounded-lg hover:bg-red-200 ml-1"><i class="fa-solid fa-minus"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        function updateQty(id, change) {
+            const item = stockItems.find(i => i.id === id);
+            if(item) {
+                item.qty = Math.max(0, item.qty + change);
+                renderStock();
+            }
+        }
+
+        // 4. ระบบ POS & Google Sheets
         function calculateNet() {
             const cash = parseFloat(document.getElementById('pos-cash').value) || 0;
             const expense = parseFloat(document.getElementById('pos-expense').value) || 0;
@@ -88,42 +333,42 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกข้อมูล...';
             btn.disabled = true;
 
+            const userData = JSON.parse(localStorage.getItem('pizza_user_session'));
             const cash = parseFloat(document.getElementById('pos-cash').value) || 0;
             const expense = parseFloat(document.getElementById('pos-expense').value) || 0;
 
             const payload = {
                 date: new Date().toLocaleDateString('th-TH'),
-                branch: document.getElementById('display-branch').innerText.replace(/[()]/g, ''),
-                staffName: document.getElementById('display-user').innerText,
+                branch: userData.branch,
+                staffName: userData.nickname,
                 totalCash: cash,
                 expenses: expense,
                 netCash: cash - expense
             };
 
             try {
-                // ส่งเป็น text/plain เพื่อป้องกันปัญหา CORS ของ Google Apps Script
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
                 });
-                
                 const result = await response.json();
                 if (result.status === "success") {
-                    alert('✅ บันทึกยอดลงตาราง และส่งสรุปเข้า LINE เรียบร้อยแล้ว!');
+                    alert('✅ บันทึกยอดลง Google Sheets เรียบร้อยแล้ว!');
                     document.getElementById('pos-cash').value = 0;
                     document.getElementById('pos-expense').value = 0;
                     calculateNet();
-                } else {
-                    alert('❌ ผิดพลาด: ' + result.message);
-                }
+                } else { alert('❌ ผิดพลาด: ' + result.message); }
             } catch (error) {
-                alert('❌ ขัดข้อง: ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+                alert('❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
             } finally {
-                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> บันทึกยอดและส่งเข้า LINE';
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> บันทึกยอดและซิงก์ Google Sheets';
                 btn.disabled = false;
             }
         }
+
+        // เริ่มต้นการทำงาน
+        window.onload = loadSession;
     </script>
 </body>
 </html>
