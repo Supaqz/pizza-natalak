@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pizza หน้าทะลัก - POS System</title>
+    <title>Pizza หน้าทะลัก - POS & ERP System</title>
     <!-- โหลดฟอนต์ Prompt -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- โหลด Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลด FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script>
@@ -14,7 +16,10 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Prompt', 'sans-serif'] },
-                    colors: { brand: { DEFAULT: '#FF5C00', light: '#FFF0E5', hover: '#E55300' }, bg: '#F4F6F8' }
+                    colors: { 
+                        brand: { DEFAULT: '#FF5C00', light: '#FFF0E5', hover: '#E55300' },
+                        bg: '#F4F6F8' 
+                    }
                 }
             }
         }
@@ -22,12 +27,14 @@
     <style>
         body { background-color: #F4F6F8; -webkit-font-smoothing: antialiased; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .receipt-dashed { border-bottom: 1px dashed #cbd5e1; }
     </style>
 </head>
 <body class="text-slate-800 flex flex-col min-h-screen">
 
-    <!-- ================= 1. หน้าจอ Login (เชื่อม Firebase แล้ว) ================= -->
+    <!-- ================= 1. หน้าจอ Login ================= -->
     <div id="login-screen" class="fixed inset-0 bg-[#333C4A] z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-[32px] p-8 md:p-10 max-w-md w-full shadow-2xl relative">
             
@@ -43,27 +50,21 @@
                 <!-- สาขา -->
                 <div>
                     <label class="block text-sm font-bold text-slate-800 mb-3"><i class="fa-solid fa-shop text-brand mr-1"></i> 1. เลือกสาขาที่จะเข้าปฏิบัติงาน <span class="text-red-500">*</span></label>
-                    <div class="space-y-3">
-                        <div class="border-2 border-brand bg-[#FFF6F0] rounded-xl p-4 flex items-center justify-between cursor-pointer shadow-sm">
-                            <div>
-                                <h4 class="font-bold text-brand flex items-center gap-2"><i class="fa-solid fa-lock"></i> สาขา เทอมินอล 21 โคราช</h4>
-                                <p class="text-xs text-orange-600/80 mt-1">ชั้น 4 โซนอาหาร เทอมินอล 21 นครราชสีมา</p>
-                            </div>
-                            <div class="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-check text-xs"></i></div>
+                    <div class="border-2 border-brand bg-[#FFF6F0] rounded-xl p-4 flex items-center justify-between cursor-pointer shadow-sm">
+                        <div>
+                            <h4 class="font-bold text-brand flex items-center gap-2"><i class="fa-solid fa-lock"></i> สาขา เทอมินอล 21 โคราช</h4>
+                            <p class="text-xs text-orange-600/80 mt-1">ชั้น 4 โซนอาหาร เทอมินอล 21 นครราชสีมา</p>
                         </div>
+                        <div class="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-check text-xs"></i></div>
                     </div>
                 </div>
 
                 <!-- ข้อมูลพนักงาน -->
                 <div>
                     <label class="block text-sm font-bold text-slate-800 mb-3"><i class="fa-regular fa-user text-brand mr-1"></i> 2. กรอกข้อมูลพนักงาน / ผู้เข้าใช้งาน <span class="text-red-500">*</span></label>
-                    <div class="space-y-3">
-                        <div>
-                            <div class="relative">
-                                <i class="fa-regular fa-user absolute left-4 top-3.5 text-slate-400"></i>
-                                <input type="text" id="nickname-input" placeholder="ชื่อเล่น เช่น น้องส้ม, แอดมินตั้ม" class="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-brand outline-none transition-colors">
-                            </div>
-                        </div>
+                    <div class="relative">
+                        <i class="fa-regular fa-user absolute left-4 top-3.5 text-slate-400"></i>
+                        <input type="text" id="nickname-input" placeholder="ชื่อเล่น เช่น น้องส้ม, แอดมินตั้ม" class="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-brand outline-none transition-colors">
                     </div>
                 </div>
 
@@ -81,122 +82,265 @@
                 <!-- ปุ่ม Google Login -->
                 <button id="btn-google-login" class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-3 text-sm shadow-sm">
                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
-                    เข้าสู่ระบบด้วย Google (ดึงอีเมลอัตโนมัติ)
+                    เข้าสู่ระบบด้วย Google
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ================= 2. แอปพลิเคชันหลัก (Main App Wrapper) ================= -->
+    <!-- ================= 2. แอปพลิเคชันหลัก ================= -->
     <div id="main-app" class="hidden flex-col flex-1 w-full relative">
-        <!-- 
-            [ให้นำโค้ด <header> และ <main> (หน้าสต๊อก และ หน้าสรุปยอด) ที่ผมเคยส่งให้ มาวางต่อกันตรงนี้ได้เลยครับ] 
-        -->
         
-        <!-- ตัวอย่างปุ่ม Logout (วางไว้ชั่วคราวให้กดทดสอบ) -->
-        <div class="p-10 text-center">
-            <h2 class="text-2xl font-bold mb-4">ยินดีต้อนรับสู่ระบบ Pizza หน้าทะลัก</h2>
-            <p id="display-user-info" class="text-slate-600 mb-6">กำลังโหลดข้อมูลผู้ใช้...</p>
-            <button id="btn-logout" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-600">ออกจากระบบ</button>
+        <!-- Header & Tabs -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+            <div class="max-w-[1400px] mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-brand text-white rounded-lg flex items-center justify-center text-lg -rotate-12"><i class="fa-solid fa-pizza-slice"></i></div>
+                    <h1 class="font-black text-lg text-[#1A1F2B]">Pizza <span class="text-brand font-normal">หน้าทะลัก</span></h1>
+                </div>
+
+                <div class="flex items-center gap-3 flex-wrap">
+                    <span id="badge-role" class="flex items-center gap-1.5 bg-orange-50 text-brand border border-orange-100 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                        <i class="fa-solid fa-shield-halved"></i> <span>Admin</span>
+                    </span>
+                    <span class="hidden sm:flex items-center gap-1.5 bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                        <i class="fa-solid fa-store text-orange-400"></i> สาขา เทอมินอล 21 โคราช
+                    </span>
+                    <div class="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
+                    <button onclick="logout()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full text-sm font-semibold transition-colors text-slate-700">
+                        <img id="user-avatar" src="" class="w-5 h-5 rounded-full bg-white" alt="User">
+                        <span id="user-name-display">ชื่อพนักงาน</span> <i class="fa-solid fa-arrow-right-from-bracket text-slate-400 ml-1"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="border-t border-slate-100">
+                <div class="max-w-[1400px] mx-auto px-4 flex gap-2 py-2 overflow-x-auto hide-scrollbar">
+                    <button onclick="switchTab('page-stock')" id="tab-btn-stock" class="bg-brand text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center gap-2 shrink-0 transition-colors">
+                        <i class="fa-solid fa-cube"></i> 1. จัดการข้อมูลสต๊อก (Stock)
+                    </button>
+                    <button onclick="switchTab('page-cash')" id="tab-btn-cash" class="bg-white hover:bg-slate-50 text-slate-600 px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shrink-0">
+                        <i class="fa-solid fa-calculator"></i> 2. สรุปยอดเงินสดประจำวัน (Daily Cash)
+                    </button>
+                    <button onclick="switchTab('page-admin')" id="tab-btn-admin" class="bg-white hover:bg-slate-50 text-slate-600 px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shrink-0">
+                        <i class="fa-solid fa-users"></i> 3. จัดการสิทธิ์ & พนักงาน (Admin)
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 max-w-[1400px] w-full mx-auto p-4 md:p-6 pb-24">
+            
+            <!-- ====== แท็บ 1: หน้าสต๊อก ====== -->
+            <section id="page-stock" class="block animate-fade-in">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-cube text-brand text-2xl"></i> ใบนับสต๊อกสินค้าประจำวัน</h2>
+                        <p class="text-sm text-slate-500 mt-1 pl-8">บันทึกและตรวจสอบปริมาณสต๊อกคงเหลือ และของเสีย/ทิ้งประจำวัน</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[24px] shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 bg-[#FAFBFC] flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex flex-col w-full md:w-auto">
+                            <h3 class="font-bold text-slate-800 text-lg">รายการวัตถุดิบและบรรจุภัณฑ์</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 bg-slate-50 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Card 1 -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-brand transition-colors">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-slate-800 text-[15px]">แป้งพิซซ่า</h4>
+                                <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">แผ่น</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="block text-[11px] font-semibold text-slate-500 mb-1">เหลือ</label><input type="number" class="w-full text-center font-black text-slate-700 border border-slate-300 rounded-lg py-2 outline-none" value="0"></div>
+                                <div><label class="block text-[11px] font-semibold text-red-500 mb-1">ทิ้ง/เสีย</label><input type="number" class="w-full text-center font-black text-red-600 bg-red-50 border border-red-200 rounded-lg py-2 outline-none" value="0"></div>
+                            </div>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-brand transition-colors">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-slate-800 text-[15px]">ชีสรวม</h4>
+                                <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">ก้อน</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="block text-[11px] font-semibold text-slate-500 mb-1">เหลือ</label><input type="number" class="w-full text-center font-black text-slate-700 border border-slate-300 rounded-lg py-2 outline-none" value="0"></div>
+                                <div><label class="block text-[11px] font-semibold text-red-500 mb-1">ทิ้ง/เสีย</label><input type="number" class="w-full text-center font-black text-red-600 bg-red-50 border border-red-200 rounded-lg py-2 outline-none" value="0"></div>
+                            </div>
+                        </div>
+                        <!-- Card 3 -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-brand transition-colors">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-slate-800 text-[15px]">กล่องพิซซ่า</h4>
+                                <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">ใบ</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="block text-[11px] font-semibold text-slate-500 mb-1">เหลือ</label><input type="number" class="w-full text-center font-black text-slate-700 border border-slate-300 rounded-lg py-2 outline-none" value="0"></div>
+                                <div><label class="block text-[11px] font-semibold text-red-500 mb-1">ทิ้ง/เสีย</label><input type="number" class="w-full text-center font-black text-red-600 bg-red-50 border border-red-200 rounded-lg py-2 outline-none" value="0"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 border-t border-slate-200 bg-white flex justify-end">
+                        <button class="bg-brand hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl shadow-md flex items-center gap-2"><i class="fa-regular fa-floppy-disk"></i> บันทึกใบนับสต๊อก</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ====== แท็บ 2: หน้าสรุปยอดเงินสด ====== -->
+            <section id="page-cash" class="hidden animate-fade-in">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">ใบนับเงินสด & สรุปยอดขายรายวัน</h2>
+                    </div>
+                    <button onclick="toggleModal('modal-receipt')" class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm hover:bg-orange-600">
+                        <i class="fa-solid fa-print"></i> ออกใบเสร็จสรุปยอด
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- ซ้าย: นับธนบัตร -->
+                    <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-[#FAFBFC]">
+                            <h3 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-money-bill-1-wave text-brand mr-2"></i> 1. ตารางนับธนบัตรและเหรียญ</h3>
+                        </div>
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-600">
+                                <tr><th class="py-3 px-4 text-left w-1/3">ชนิด</th><th class="py-3 px-4 text-center w-1/3">จำนวน (ใบ/เหรียญ)</th><th class="py-3 px-4 text-right w-1/3">รวมเงิน</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                                <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">1000 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-1000" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 outline-none focus:border-brand" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-1000">฿0</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">500 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-500" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 outline-none focus:border-brand" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-500">฿0</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">100 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-100" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 outline-none focus:border-brand" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-100">฿0</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">50 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-50" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 outline-none focus:border-brand" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-50">฿0</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="py-2.5 px-4">20 บาท</td><td class="py-2.5 px-4"><input type="number" id="qty-20" class="cash-input w-full text-center border border-slate-200 rounded-lg py-1.5 outline-none focus:border-brand" placeholder="0"></td><td class="py-2.5 px-4 text-right font-bold text-brand" id="sum-20">฿0</td></tr>
+                            </tbody>
+                            <tfoot class="bg-orange-50/50 border-t border-orange-100">
+                                <tr>
+                                    <td colspan="2" class="py-4 px-4 text-center font-bold text-slate-800">รวมเงินสดทั้งหมด (Total Cash)</td>
+                                    <td class="py-4 px-4 text-right font-black text-brand text-lg" id="total-actual-cash">฿0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- ขวา: หักเงิน & สรุป -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                            <h3 class="font-bold text-brand text-sm mb-3">2. สรุปยอดขายพิซซ่า</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="border border-orange-200 bg-orange-50/30 rounded-xl p-3">
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">ขายได้ (ถาด)</label>
+                                    <input type="number" id="input-sales" class="w-full text-center font-bold text-brand bg-transparent outline-none text-xl" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                            <h3 class="font-bold text-red-500 text-sm mb-3">3. รายการหักเงินสด</h3>
+                            <div class="space-y-2 mb-3">
+                                <div class="flex items-center gap-2">
+                                    <input type="text" value="หักเงินทอน" readonly class="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600">
+                                    <input type="number" id="deduct-1" class="deduct-input w-1/2 bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-red-500 font-bold outline-none text-right" placeholder="0">
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="text" value="หักค่าล้างจาน" readonly class="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600">
+                                    <input type="number" id="deduct-2" class="deduct-input w-1/2 bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-red-500 font-bold outline-none text-right" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- กล่องเขียว -->
+                        <div class="bg-[#00B900] rounded-2xl shadow-lg p-5 text-white relative">
+                            <h3 class="font-bold text-sm mb-2">4. เงินสดคงเหลือสุทธินำส่ง</h3>
+                            <p class="text-4xl font-black mb-1" id="net-cash-display">฿0.00</p>
+                            <p class="text-[10px] text-green-100 mb-4" id="net-cash-formula">คำนวณจาก: เงินสด (฿0) - ยอดหัก (฿0)</p>
+                            <button id="btn-save-sheet" onclick="submitDailyReport(false)" class="w-full bg-white text-[#00B900] font-bold py-3 rounded-xl text-sm shadow-sm hover:bg-green-50 transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-regular fa-floppy-disk"></i> บันทึกยอดเข้า Google Sheets
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ====== แท็บ 3: หน้าแอดมิน ====== -->
+            <section id="page-admin" class="hidden animate-fade-in">
+                <div class="bg-gradient-to-r from-[#2a1708] to-[#4a2511] rounded-3xl p-8 flex flex-col md:flex-row justify-between shadow-lg mb-8 text-white">
+                    <div>
+                        <span class="inline-block bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-xs font-bold mb-3"><i class="fa-solid fa-shield-halved"></i> แผงควบคุม (Admin)</span>
+                        <h2 class="text-3xl font-bold mb-2">ระบบจัดการผู้ใช้งานและตั้งค่า</h2>
+                    </div>
+                    <button onclick="toggleModal('modal-line')" class="mt-4 md:mt-0 bg-[#06C755] hover:bg-green-600 font-bold py-3 px-6 rounded-xl shadow-lg transition-colors flex items-center gap-2">
+                        <i class="fa-brands fa-line text-lg"></i> ตั้งค่าแจ้งเตือน LINE API
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex items-center gap-6">
+                    <div class="w-14 h-14 rounded-full bg-orange-50 text-brand flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-key"></i></div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg text-slate-900 mb-1">ตั้งรหัส PIN ผู้ดูแลระบบ</h3>
+                        <p class="text-xs text-slate-500">รหัสนี้ใช้ยืนยันการอนุมัติลบข้อมูล</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <input type="password" placeholder="PIN ใหม่" class="w-32 bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-center tracking-widest text-sm outline-none">
+                        <button class="bg-slate-900 text-white font-bold px-6 py-3 rounded-xl shadow-md">เปลี่ยน PIN</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ================= 3. Modals ================= -->
+    
+    <!-- Modal: ใบเสร็จ & ส่ง LINE -->
+    <div id="modal-receipt" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-3 flex items-center justify-between gap-4 max-w-sm w-full mb-4 shadow-lg border border-white/50">
+            <button id="btn-send-line" onclick="submitDailyReport(true)" class="bg-[#06C755] hover:bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm"><i class="fa-regular fa-paper-plane"></i> บันทึก & ส่งไลน์</button>
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-print"></i> พิมพ์</button>
+                <button onclick="toggleModal('modal-receipt')" class="bg-slate-100 text-slate-400 hover:text-slate-700 w-8 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl max-w-sm w-full font-mono text-sm shadow-2xl">
+            <h3 class="text-center font-bold text-brand mb-4">Pizza หน้าทะลัก<br><span class="text-xs text-slate-500">ใบเสร็จสรุปยอดประจำวัน</span></h3>
+            <p class="text-center text-xs text-slate-400 receipt-dashed pb-4 mb-4" id="receipt-date">วันที่/เวลา</p>
+            <div class="text-center mb-6 border border-emerald-300 bg-emerald-50 rounded-xl p-4">
+                <p class="text-[10px] font-bold text-emerald-600">ยอดเงินสดสุทธินำส่ง</p>
+                <p class="text-3xl font-black text-emerald-700" id="receipt-net">฿0.00</p>
+            </div>
         </div>
     </div>
 
-    <!-- ================= 3. ระบบ Firebase & Logic ================= -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    <!-- Modal: ตั้งค่า LINE API -->
+    <div id="modal-line" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="font-bold text-lg text-slate-900"><i class="fa-brands fa-line text-emerald-500 mr-2"></i>ตั้งค่า LINE API</h3>
+                <button onclick="toggleModal('modal-line')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Channel Access Token</label>
+                    <input type="text" id="line-token-input" placeholder="วาง Token จาก LINE Console" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Target ID (Group ID)</label>
+                    <input type="text" id="line-target-input" placeholder="ขึ้นต้นด้วย C... หรือ U..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm outline-none">
+                </div>
+                <button onclick="saveLineConfig()" class="w-full bg-[#00B900] text-white font-bold py-3 rounded-xl mt-4">บันทึกข้อมูล LINE</button>
+            </div>
+        </div>
+    </div>
 
-        // Config ของโปรเจกต์ Pizza Natalak
-        const firebaseConfig = {
-  apiKey: "AIzaSyAyVBpIvoy9d0BnYaP6OU30u6kfe6lMuqs",
-  authDomain: "pizza-natalak.firebaseapp.com",
-  projectId: "pizza-natalak",
-  storageBucket: "pizza-natalak.firebasestorage.app",
-  messagingSenderId: "78990099997",
-  appId: "1:78990099997:web:fd7df10a43f179e192a8f4",
-  measurementId: "G-SR22WE99W0"
-};
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
-        // ฟังก์ชันเมื่อกดปุ่ม Google Login
-        document.getElementById('btn-google-login').addEventListener('click', () => {
-            const btn = document.getElementById('btn-google-login');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-slate-400"></i> กำลังเชื่อมต่อ...';
-            
-            signInWithPopup(auth, provider).then((result) => {
-                const user = result.user;
-                saveSession(user.displayName, user.email, user.photoURL, "Admin");
-            }).catch((error) => {
-                console.error("Login Failed:", error);
-                alert("เกิดข้อผิดพลาดในการล็อกอิน: " + error.message);
-                btn.innerHTML = '<img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5"> เข้าสู่ระบบด้วย Google';
-            });
-        });
-
-        // ฟังก์ชัน Login แบบธรรมดา (พิมพ์ชื่อเอง)
-        window.manualLogin = function() {
-            const nickname = document.getElementById('nickname-input').value.trim();
-            if(!nickname) return alert("กรุณาระบุชื่อพนักงานครับ");
-            
-            const role = nickname.toLowerCase() === 'admin' ? 'Admin' : 'Staff';
-            saveSession(nickname, "ไม่ระบุอีเมล", "", role);
-        };
-
-        // ฟังก์ชันบันทึก Session และเปิดหน้าแอป
-        function saveSession(name, email, photo, role) {
-            const sessionData = {
-                nickname: name || "พนักงาน",
-                email: email,
-                photo: photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-                role: role,
-                branch: "สาขา เทอมินอล 21 โคราช"
-            };
-            localStorage.setItem('pizza_session', JSON.stringify(sessionData));
-            showMainApp(sessionData);
-        }
-
-        // ฟังก์ชันสลับหน้าจอไปหน้าหลัก
-        function showMainApp(userData) {
-            document.getElementById('login-screen').classList.add('hidden');
-            const mainApp = document.getElementById('main-app');
-            mainApp.classList.remove('hidden');
-            mainApp.classList.add('flex');
-            
-            // อัปเดตข้อมูลบนหน้าจอ (ตัวอย่าง)
-            const display = document.getElementById('display-user-info');
-            if(display) {
-                display.innerHTML = `เข้าสู่ระบบโดย: <b>${userData.nickname}</b> <br> สิทธิ์: ${userData.role} <br> อีเมล: ${userData.email}`;
-            }
-        }
-
-        // ฟังก์ชัน Logout
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            signOut(auth).then(() => {
-                localStorage.removeItem('pizza_session');
-                document.getElementById('main-app').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('flex');
-                document.getElementById('login-screen').classList.remove('hidden');
-                document.getElementById('btn-google-login').innerHTML = '<img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5"> เข้าสู่ระบบด้วย Google';
-            });
-        });
-
-        // เช็ค Session ตอนโหลดเว็บ (จำการล็อกอินอัตโนมัติ)
-        window.addEventListener('DOMContentLoaded', () => {
-            const session = localStorage.getItem('pizza_session');
-            if(session) {
-                showMainApp(JSON.parse(session));
-            }
-        });
-    </script>
-    <!-- ================= 3. ระบบ Firebase & Logic หลักของแอป ================= -->
+    <!-- ================= 4. Scripts (Firebase & Logic) ================= -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // 1. Config ของ Firebase
+        // 1. Firebase Config (ใช้ของจริงของคุณ)
         const firebaseConfig = {
             apiKey: "AIzaSyAyVbpIvoy9d0BnYaP6OU30u6kfe6lMuqs",
             authDomain: "pizza-natalak.firebaseapp.com",
@@ -209,25 +353,18 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // 🌟 ตั้งค่าอีเมลเจ้าของร้าน (แอดมิน)
-        const ADMIN_EMAILS = [
-            "suphachaimunsan1@gmail.com",
-            "supaqz.sm@gmail.com"
-        ];
+        const ADMIN_EMAILS = ["suphachaimunsan1@gmail.com", "supaqz.sm@gmail.com"];
 
-        // 2. ระบบเข้าสู่ระบบ (Login Flow)
+        // 2. Auth Flow
         const btnGoogleLogin = document.getElementById('btn-google-login');
         if(btnGoogleLogin) {
             btnGoogleLogin.addEventListener('click', () => {
                 btnGoogleLogin.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-slate-400"></i> กำลังเชื่อมต่อ...';
-                
                 signInWithPopup(auth, provider).then((result) => {
                     const user = result.user;
-                    // ตรวจสอบสิทธิ์จากอีเมล
                     const role = ADMIN_EMAILS.includes(user.email) ? 'Admin' : 'Staff';
                     saveSession(user.displayName, user.email, user.photoURL, role);
                 }).catch((error) => {
-                    console.error("Login Failed:", error);
                     alert("เข้าสู่ระบบไม่สำเร็จ: " + error.message);
                     btnGoogleLogin.innerHTML = '<img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5"> เข้าสู่ระบบด้วย Google';
                 });
@@ -242,80 +379,79 @@
         };
 
         function saveSession(name, email, photo, role) {
-            const sessionData = {
-                nickname: name || "พนักงาน",
-                email: email,
-                photo: photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-                role: role,
-                branch: "สาขา เทอมินอล 21 โคราช" // ค่าเริ่มต้น
-            };
+            const sessionData = { nickname: name || "พนักงาน", email: email, photo: photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix", role: role, branch: "สาขา เทอมินอล 21 โคราช" };
             localStorage.setItem('pizza_session', JSON.stringify(sessionData));
             initApp(sessionData);
         }
 
-        // 3. เริ่มต้นแอปพลิเคชัน (Init App)
         function initApp(userData) {
-            // สลับหน้าจอ
             document.getElementById('login-screen').classList.add('hidden');
             const mainApp = document.getElementById('main-app');
             mainApp.classList.remove('hidden');
             mainApp.classList.add('flex');
             
-            // นำข้อมูลผู้ใช้ไปแสดงบน Header (ถ้ามี Element มารองรับ)
-            // เช็คและแสดงแท็บ Admin
-            const adminTabBtn = document.getElementById('tab-admin'); // ต้องตั้ง id="tab-admin" ที่ปุ่มแท็บ
+            // อัปเดต UI
+            document.getElementById('user-name-display').innerText = userData.nickname;
+            document.getElementById('user-avatar').src = userData.photo;
+            document.getElementById('badge-role').innerHTML = `<i class="fa-solid ${userData.role==='Admin'?'fa-shield-halved':'fa-user'}"></i> <span>${userData.role}</span>`;
+            
+            const adminTabBtn = document.getElementById('tab-btn-admin');
             if(adminTabBtn) {
-                if(userData.role === 'Admin') {
-                    adminTabBtn.style.display = 'flex';
-                } else {
-                    adminTabBtn.style.display = 'none';
-                    switchTab('stock'); // บังคับไปหน้าแรก
-                }
+                if(userData.role === 'Admin') adminTabBtn.classList.remove('hidden');
+                else { adminTabBtn.classList.add('hidden'); switchTab('page-stock'); }
             }
         }
 
         window.logout = function() {
             signOut(auth).then(() => {
                 localStorage.removeItem('pizza_session');
-                document.getElementById('main-app').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('flex');
-                document.getElementById('login-screen').classList.remove('hidden');
-                if(btnGoogleLogin) btnGoogleLogin.innerHTML = '<img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5"> เข้าสู่ระบบด้วย Google';
+                location.reload(); // รีเฟรชหน้าเพื่อเคลียร์สถานะทั้งหมด
             });
         };
 
-        // 4. ระบบจัดการแท็บ (Tabs Manager)
+        // 3. Tab Navigation & Modals
         window.switchTab = function(tabId) {
-            const tabs = ['page-stock', 'page-cash', 'page-admin'];
-            tabs.forEach(t => {
-                const el = document.getElementById(t);
-                if(el) {
-                    if(t === tabId) el.classList.remove('hidden');
-                    else el.classList.add('hidden');
+            ['page-stock', 'page-cash', 'page-admin'].forEach(t => {
+                const page = document.getElementById(t);
+                const btn = document.getElementById('tab-btn-' + t.split('-')[1]);
+                if(page && btn) {
+                    if(t === tabId) {
+                        page.classList.remove('hidden');
+                        page.classList.add('block');
+                        btn.className = "bg-brand text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center gap-2 shrink-0 transition-colors";
+                    } else {
+                        page.classList.add('hidden');
+                        page.classList.remove('block');
+                        btn.className = "bg-white hover:bg-slate-50 text-slate-600 px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shrink-0";
+                    }
                 }
             });
         };
 
-        // 5. ระบบเครื่องคิดเงิน (Cash Calculator)
+        window.toggleModal = function(id) {
+            const el = document.getElementById(id);
+            if(el) el.classList.toggle('hidden');
+            if(id === 'modal-receipt' && !el.classList.contains('hidden')) {
+                document.getElementById('receipt-date').innerText = new Date().toLocaleString('th-TH');
+                document.getElementById('receipt-net').innerText = document.getElementById('net-cash-display').innerText;
+            }
+        };
+
+        // 4. Calculator Logic
         window.calculateDailyCash = function() {
             const m1000 = (parseInt(document.getElementById('qty-1000')?.value) || 0) * 1000;
             const m500 = (parseInt(document.getElementById('qty-500')?.value) || 0) * 500;
             const m100 = (parseInt(document.getElementById('qty-100')?.value) || 0) * 100;
             const m50 = (parseInt(document.getElementById('qty-50')?.value) || 0) * 50;
             const m20 = (parseInt(document.getElementById('qty-20')?.value) || 0) * 20;
-            const m10 = (parseInt(document.getElementById('qty-10')?.value) || 0) * 10;
-            const m5 = (parseInt(document.getElementById('qty-5')?.value) || 0) * 5;
-            const m2 = (parseInt(document.getElementById('qty-2')?.value) || 0) * 2;
-            const m1 = (parseInt(document.getElementById('qty-1')?.value) || 0) * 1;
-
+            
             if(document.getElementById('sum-1000')) document.getElementById('sum-1000').innerText = `฿${m1000.toLocaleString()}`;
             if(document.getElementById('sum-500')) document.getElementById('sum-500').innerText = `฿${m500.toLocaleString()}`;
             if(document.getElementById('sum-100')) document.getElementById('sum-100').innerText = `฿${m100.toLocaleString()}`;
             if(document.getElementById('sum-50')) document.getElementById('sum-50').innerText = `฿${m50.toLocaleString()}`;
             if(document.getElementById('sum-20')) document.getElementById('sum-20').innerText = `฿${m20.toLocaleString()}`;
-            if(document.getElementById('sum-10')) document.getElementById('sum-10').innerText = `฿${m10.toLocaleString()}`;
             
-            const totalCash = m1000 + m500 + m100 + m50 + m20 + m10 + m5 + m2 + m1;
+            const totalCash = m1000 + m500 + m100 + m50 + m20;
             if(document.getElementById('total-actual-cash')) document.getElementById('total-actual-cash').innerText = `฿${totalCash.toLocaleString()}`;
 
             const deduct1 = parseInt(document.getElementById('deduct-1')?.value) || 0;
@@ -323,23 +459,81 @@
             const totalDeduct = deduct1 + deduct2;
 
             const netCash = totalCash - totalDeduct;
-            
             if(document.getElementById('net-cash-display')) document.getElementById('net-cash-display').innerText = `฿${netCash.toLocaleString()}.00`;
             if(document.getElementById('net-cash-formula')) document.getElementById('net-cash-formula').innerText = `คำนวณจาก: เงินสด (฿${totalCash.toLocaleString()}) - ยอดหัก (฿${totalDeduct.toLocaleString()})`;
         };
 
-        // เช็ค Session อัตโนมัติเมื่อเปิดเว็บ
+        // 5. Backend Integrations (GAS & LINE)
+        // 🔴 อย่าลืมเปลี่ยน URL ตรงนี้ เป็น Web App URL จาก Google Apps Script ของคุณ
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/ใส่_URL_ของคุณตรงนี้/exec";
+
+        window.saveLineConfig = function() {
+            localStorage.setItem('line_token', document.getElementById('line-token-input').value);
+            localStorage.setItem('line_target', document.getElementById('line-target-input').value);
+            alert("บันทึกการตั้งค่า LINE สำเร็จ!");
+            toggleModal('modal-line');
+        };
+
+        window.submitDailyReport = async function(isSendLine = false) {
+            const session = JSON.parse(localStorage.getItem('pizza_session') || '{}');
+            if (!session.nickname) return alert("กรุณาเข้าสู่ระบบก่อน");
+
+            const rawTotalCash = document.getElementById('total-actual-cash').innerText.replace(/[฿,]/g, '');
+            const rawNetCash = document.getElementById('net-cash-display').innerText.replace(/[฿,]/g, '');
+            const deduct1 = parseInt(document.getElementById('deduct-1')?.value) || 0;
+            const deduct2 = parseInt(document.getElementById('deduct-2')?.value) || 0;
+            const sales = document.getElementById('input-sales')?.value || "0";
+
+            const payload = {
+                branch: session.branch,
+                staff: session.nickname,
+                pizzaSales: sales,
+                totalCash: parseFloat(rawTotalCash) || 0,
+                deduct: deduct1 + deduct2,
+                netCash: parseFloat(rawNetCash) || 0,
+                sendLine: isSendLine,
+                lineToken: localStorage.getItem('line_token') || "",
+                lineTargetId: localStorage.getItem('line_target') || ""
+            };
+
+            if(isSendLine && (!payload.lineToken || !payload.lineTargetId)) {
+                return alert("กรุณาตั้งค่า LINE API ในหน้าแอดมินก่อนส่งไลน์ครับ");
+            }
+
+            const btnId = isSendLine ? 'btn-send-line' : 'btn-save-sheet';
+            const btnElement = document.getElementById(btnId);
+            const originalText = btnElement.innerHTML;
+            btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...';
+            btnElement.disabled = true;
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if (result.status === "success") {
+                    alert(isSendLine ? "✅ บันทึกยอดและส่งเข้า LINE สำเร็จ!" : "✅ บันทึกยอดลง Google Sheets เรียบร้อย!");
+                } else alert("❌ ผิดพลาด: " + result.message);
+            } catch (error) {
+                console.error("Error:", error);
+                alert("❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์หลังบ้านได้ (อย่าลืมใส่ URL ของ Apps Script นะครับ)");
+            } finally {
+                btnElement.innerHTML = originalText;
+                btnElement.disabled = false;
+            }
+        };
+
+        // Initialize when loaded
         window.addEventListener('DOMContentLoaded', () => {
             const session = localStorage.getItem('pizza_session');
-            if(session) {
-                initApp(JSON.parse(session));
-            }
+            if(session) initApp(JSON.parse(session));
             
-            // ผูก Event ให้ช่องกรอกเงินคำนวณอัตโนมัติ
-            const inputs = document.querySelectorAll('.cash-input, .deduct-input');
-            inputs.forEach(input => {
+            // ผูก Event เครื่องคิดเงิน
+            document.querySelectorAll('.cash-input, .deduct-input').forEach(input => {
                 input.addEventListener('input', calculateDailyCash);
             });
+
+            // โหลดค่า LINE config เก่ามาใส่ใน Modal
+            document.getElementById('line-token-input').value = localStorage.getItem('line_token') || "";
+            document.getElementById('line-target-input').value = localStorage.getItem('line_target') || "";
         });
     </script>
 </body>
