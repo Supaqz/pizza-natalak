@@ -547,5 +547,95 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });    
     </script>
+   <!-- โหลด Firebase SDK แบบ Module (เวอร์ชัน 10.x) -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+    // ข้อมูล Config ของคุณ Suphachai (จากภาพ)
+    const firebaseConfig = {
+        apiKey: "AIzaSyAyVbpIvoy9d0BnYaP6OU30u6kfe6lMuqs",
+        authDomain: "pizza-natalak.firebaseapp.com",
+        projectId: "pizza-natalak",
+        storageBucket: "pizza-natalak.firebasestorage.app",
+        messagingSenderId: "78990099997",
+        appId: "1:78990099997:web:fd7df10a43f179e192a8f4",
+        measurementId: "G-SR22WE99W0"
+    };
+
+    // เริ่มต้นเชื่อมต่อ Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // ตัวแปรเก็บข้อมูลผู้ใช้ชั่วคราว
+    let currentUserData = {};
+
+    // 1. ฟังก์ชันเมื่อกดปุ่ม "เข้าสู่ระบบด้วย Google"
+    const loginBtn = document.getElementById('btn-google-login');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            // เด้งหน้าต่าง Google Login
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    
+                    // ดึงข้อมูลอีเมลและรูปโปรไฟล์จาก Google
+                    currentUserData.email = user.email;
+                    currentUserData.photoURL = user.photoURL;
+
+                    // อัปเดตหน้าจอ Step 2 (ระบุชื่อ) ให้แสดงรูปและอีเมลจริง
+                    // (ต้องแน่ใจว่าใน HTML มี id="display-email" และมีรูป img รอไว้)
+                    const displayEmail = document.getElementById('display-email');
+                    if(displayEmail) displayEmail.innerText = user.email;
+                    
+                    const displayImg = document.querySelector('.bg-slate-50 img'); // ดึงรูปในกล่องโปรไฟล์
+                    if(displayImg) displayImg.src = user.photoURL || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix";
+
+                    // ซ่อนหน้าล็อกอิน และเปิดหน้าแอปหลัก
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('main-app').classList.remove('hidden');
+                    document.getElementById('main-app').classList.add('flex');
+                    
+                    // บันทึก Session ลง LocalStorage เพื่อจำการล็อกอิน
+                    const sessionData = { 
+                        nickname: user.displayName || 'พนักงาน', // ดึงชื่อจาก Google มาใช้เบื้องต้น
+                        branch: "สาขา เทอมินอล 21 โคราช", 
+                        role: "Admin", // ค่าเริ่มต้น (สามารถปรับลอจิกเช็คอีเมลได้ภายหลัง)
+                        email: user.email,
+                        photo: user.photoURL
+                    };
+                    localStorage.setItem('pizza_session', JSON.stringify(sessionData));
+                })
+                .catch((error) => {
+                    console.error("Login Failed:", error);
+                    alert("เข้าสู่ระบบไม่สำเร็จ: " + error.message);
+                });
+        });
+    }
+
+    // 2. ฟังก์ชัน Logout ให้เตะออกจาก Google ด้วย
+    window.logout = function() {
+        signOut(auth).then(() => {
+            localStorage.removeItem('pizza_session');
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('flex');
+            document.getElementById('login-screen').classList.remove('hidden');
+        }).catch((error) => {
+            console.error("Logout Error:", error);
+        });
+    };
+
+    // 3. ตรวจสอบ Session ตอนเปิดเว็บ
+    window.onload = function() {
+        const session = localStorage.getItem('pizza_session');
+        if (session) {
+            // ถ้าเคยล็อกอินแล้ว ให้ข้ามไปหน้าแอปเลย
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('flex');
+        }
+    };
+</script> 
 </body>
 </html>
